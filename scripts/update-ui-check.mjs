@@ -11,7 +11,7 @@ const context = await chromium.launchPersistentContext(fs.mkdtempSync(path.join(
   channel: process.env.E2E_BROWSER ?? 'msedge', headless: true, locale: 'zh-CN', viewport: { width: 1100, height: 950 },
   args: [`--load-extension=${extension}`, `--disable-extensions-except=${extension}`, '--disable-gpu', '--no-first-run'],
 });
-let calls = 0, version = '0.1.0-beta.2', status = 200;
+let calls = 0, version = '0.1.0-beta.3', status = 200;
 const report = { scope: 'isolated-browser-release-feed-fixture', liveReleaseClaim: false };
 try {
   await context.route('https://api.github.com/repos/lby749/lby/releases?*', route => {
@@ -37,6 +37,8 @@ try {
   await page.evaluate(() => { window.openedUpdate = []; window.open = (...args) => { window.openedUpdate.push(args); return null; }; });
   await card.getByRole('button', { name: '查看更新', exact: true }).click();
   assert.deepEqual(await page.evaluate(() => window.openedUpdate[0]), [`https://github.com/lby749/lby/releases/tag/v${version}`, '_blank', 'noopener,noreferrer']);
+  await card.getByRole('button', { name: '反馈问题或建议 ↗', exact: true }).click();
+  assert.deepEqual(await page.evaluate(() => window.openedUpdate[1]), ['https://github.com/lby749/lby/issues/new/choose', '_blank', 'noopener,noreferrer']);
   await card.getByRole('checkbox', { name: '自动提醒新版本', exact: true }).uncheck();
   await page.evaluate(() => { const state = JSON.parse(localStorage.getItem('vma-app-updates')); state.checkedAt = 0; localStorage.setItem('vma-app-updates', JSON.stringify(state)); });
   await page.reload(); await page.getByRole('button', { name: '设置', exact: true }).click();
@@ -57,6 +59,6 @@ try {
   await card.getByText('更新服務暫時無法使用，請稍後重試。', { exact: true }).waitFor();
   assert.equal(await card.getByText('目前已是最新版本。', { exact: true }).count(), 0);
   await card.screenshot({ path: 'artifacts/app-updates-unavailable.png' });
-  Object.assign(report, { automaticDiscovery: true, dailyCache: true, deferPersists: true, manualRetry: true, autoOffPersists: true, officialLinkOnly: true, notesEscaped: true, threeLanguages: true, narrowLayout: true, unavailableNotLatest: true, passed: true });
+  Object.assign(report, { automaticDiscovery: true, dailyCache: true, deferPersists: true, manualRetry: true, autoOffPersists: true, officialLinkOnly: true, feedbackEntry: true, notesEscaped: true, threeLanguages: true, narrowLayout: true, unavailableNotLatest: true, passed: true });
   console.log('APP_UPDATES_UI_PASS', JSON.stringify(report));
 } finally { fs.writeFileSync('artifacts/app-updates-ui.json', JSON.stringify(report, null, 2)); await context.close(); }

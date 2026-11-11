@@ -1,0 +1,22 @@
+name: 改进建议
+description: 欢迎提出能让视频学习更顺手的想法。
+title: "[建议] "
+body:
+  - type: markdown
+    attributes:
+      value: |
+        当前项目还不够完善，如果您有什么改进建议，欢迎提出，非常感谢！
+        感谢您的支持，如果有帮助的话，请点一个 STAR，谢谢！
+  - type: textarea
+    id: problem
+    attributes:
+      label: 你想解决什么问题？
+      description: 请描述实际使用场景。
+    validations:
+      required: true
+  - type: textarea
+    id: suggestion
+    attributes:
+      label: 希望怎样改进？
+    validations:
+      required: true

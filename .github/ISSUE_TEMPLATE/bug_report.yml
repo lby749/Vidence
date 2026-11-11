@@ -1,0 +1,39 @@
+name: 问题反馈
+description: 告诉我们遇到了什么问题，帮助完善 BETA 版本。
+title: "[问题] "
+body:
+  - type: markdown
+    attributes:
+      value: |
+        项目目前仍处于 BETA 测试阶段，还不够完善。欢迎反馈问题，非常感谢您的帮助！
+        请不要提交 API Key、连接码、登录信息或私人课程内容。
+  - type: input
+    id: version
+    attributes:
+      label: 应用版本
+      description: 可在“设置 → 应用更新”中查看。
+      placeholder: 例如 0.1.0-beta.2
+    validations:
+      required: true
+  - type: input
+    id: environment
+    attributes:
+      label: 系统和使用方式
+      placeholder: 例如 Windows 11 独立应用，或 Edge 浏览器扩展
+  - type: textarea
+    id: steps
+    attributes:
+      label: 复现步骤
+      description: 从哪个入口操作，点了什么，随后发生了什么？
+    validations:
+      required: true
+  - type: textarea
+    id: expected
+    attributes:
+      label: 期望的结果
+  - type: textarea
+    id: actual
+    attributes:
+      label: 实际结果或错误提示
+    validations:
+      required: true

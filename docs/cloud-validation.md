@@ -13,3 +13,5 @@ GitHub托管runner和Codex云环境通常预装工具，因此第三项不等于
 云端只生成无账号测试片，不执行需要OpenCode Go/DSH额度的真实模型脚本。原媒体图片问答的本机结果见verification.md；两种证据分别保留。
 
 若云端默认检出的提交较旧，应先fetch并检出本次明确指定的提交，再核对git rev-parse HEAD。测试状态以实际任务日志为准，配置了工作流不表示已通过。
+
+感谢您的支持，如果有帮助的话，请点一个 [STAR](https://github.com/lby749/lby)，谢谢！

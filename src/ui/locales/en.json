@@ -582,5 +582,7 @@
   "更新服务暂不可用，请稍后重试。": "The update service is unavailable. Try again later.",
   "暂时无法连接更新服务。": "Unable to connect to the update service.",
   "当前已是最新版本。": "You are up to date.",
-  "检查后可查看是否有新版本。": "Check to see if a new version is available."
+  "检查后可查看是否有新版本。": "Check to see if a new version is available.",
+  "项目仍在 BETA 测试阶段，欢迎提出问题和改进建议。": "This project is in BETA. Feedback and suggestions are welcome.",
+  "反馈问题或建议 ↗": "Feedback and suggestions ↗"
 }

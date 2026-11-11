@@ -42,3 +42,5 @@
 - 高清存档单独取原图，最高3840宽；预览/OCR仍轻量采样。连续运动等待八秒后允许同场景变化，避免预览与高清取帧的微小时间差让动画一直无法保存；真正转场仍拒绝。
 
 借鉴 [LectureLens](https://github.com/r0mar1n/LectureLens) 将视觉候选与知识筛选分开的思路，以及 [PySceneDetect](https://github.com/Breakthrough/PySceneDetect) 的画面变化检测思路；没有引入这些项目的整套运行时。
+
+感谢您的支持，如果有帮助的话，请点一个 [STAR](https://github.com/lby749/lby)，谢谢！

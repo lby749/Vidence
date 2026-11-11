@@ -6,7 +6,7 @@ let values: Map<string, string>, fetcher: ReturnType<typeof vi.fn>;
 beforeEach(() => {
   vi.useFakeTimers(); vi.setSystemTime(new Date('2026-11-11T12:00:00Z'));
   values = new Map(); vi.stubGlobal('localStorage', { getItem: (key: string) => values.get(key) ?? null, setItem: (key: string, value: string) => values.set(key, value) });
-  fetcher = vi.fn(async () => new Response(JSON.stringify([release('0.1.0-beta.2')]))); vi.stubGlobal('fetch', fetcher);
+  fetcher = vi.fn(async () => new Response(JSON.stringify([release('0.1.0-beta.3')]))); vi.stubGlobal('fetch', fetcher);
 });
 afterEach(() => { vi.useRealTimers(); vi.unstubAllGlobals(); });
 
@@ -21,7 +21,7 @@ it('选择最高版本，排除草稿、旧版本及外部下载地址', () => {
   expect(newestRelease([release('9.0.0-beta.1'), release('0.2.0')], '0.1.0')?.version).toBe('0.2.0');
 });
 it('只向版本目录发匿名GET，不发送学习数据或账号', async () => {
-  expect((await checkAppUpdate()).update?.version).toBe('0.1.0-beta.2');
+  expect((await checkAppUpdate()).update?.version).toBe('0.1.0-beta.3');
   expect(fetcher.mock.calls[0][0]).toBe(UPDATE_API);
   expect(fetcher.mock.calls[0][1]).toMatchObject({ credentials: 'omit', referrerPolicy: 'no-referrer', redirect: 'error' });
   expect(fetcher.mock.calls[0][1]).not.toHaveProperty('body');
@@ -47,7 +47,7 @@ it('断网和损坏的目录不误报已是最新版', async () => {
   fetcher.mockResolvedValueOnce(new Response('{}')); expect((await checkAppUpdate(true)).error).toBe('network');
 });
 it('稍后提醒保持一天，手动检查解除暂缓，升级后不重复提示旧版本', async () => {
-  await checkAppUpdate(); deferAppUpdate('0.1.0-beta.2'); expect(readUpdateState().deferredUntil).toBe(Date.now() + 86400000);
+  await checkAppUpdate(); deferAppUpdate('0.1.0-beta.3'); expect(readUpdateState().deferredUntil).toBe(Date.now() + 86400000);
   await checkAppUpdate(true); expect(readUpdateState().deferredUntil).toBe(0);
   const saved = readUpdateState(); values.set('vma-app-updates', JSON.stringify({ ...saved, update: { ...saved.update, version: APP_VERSION } }));
   expect(readUpdateState().update).toBeUndefined();

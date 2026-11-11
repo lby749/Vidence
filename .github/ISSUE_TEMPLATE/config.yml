@@ -1,0 +1,5 @@
+blank_issues_enabled: true
+contact_links:
+  - name: 功能与已知限制
+    url: https://github.com/lby749/lby/blob/main/docs/feature-audit.md
+    about: 查看哪些功能已验证、待验证或尚未实现。

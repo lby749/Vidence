@@ -80,3 +80,5 @@ DSH 的 [官方命令行协议](https://github.com/deepseek-ai/deepseek-harness/
 独立应用采用 EmbeddingGemma 300M Q4_K_M + llama.cpp b11597，权重236337120 bytes。固定公开 XQuAD 子集每语种50问、240候选段：原BGE small Q8 中/英/德 41/19/2，新原生Q4 45/48/44；并非完整MTEB，也不是课程问答准确率。相同空白页面加推理进程的私有峰值约463→337MiB、工作集约721→670MiB，不能冒充整个成品APP的等条件RAM结论。GPU优先/自动CPU回退实测见 native-embedding-check.json（真实Vulkan后注入一次错误，真实CPU重启，余弦.9998009897）；AMD和Metal硬件仍未实机测试。
 
 界面翻译使用本地字典，不调用模型。窗口跟随仅在几何/可见性变化时更新；相同网页窗口已经采集时不重复stop/start，避免无效刷新。自动验收已改为无账号headless浏览器和Qt offscreen，避免在用户当前窗口反复切换全屏。新的隔离桌面验收启动命令曾被自动审批以blocked by policy拒绝，未换方式重试该动作。
+
+感谢您的支持，如果有帮助的话，请点一个 [STAR](https://github.com/lby749/lby)，谢谢！

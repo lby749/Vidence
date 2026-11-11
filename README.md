@@ -2,7 +2,11 @@
 
 # 视频记忆助手 · BETA 测试版
 
-**0.1.0-beta.1 · MIT**
+**0.1.0-beta.2 · MIT**
+
+项目目前仍处于 **BETA 测试阶段，还不够完善**。如果遇到问题，或有什么改进建议，欢迎通过[问题反馈与建议](https://github.com/lby749/lby/issues/new/choose)提出，非常感谢！
+
+应用内也可以在“设置 → 应用更新”点击“反馈问题或建议”。
 
 把看过的视频，变成可以复习、检索和提问的学习记忆。
 
@@ -26,7 +30,7 @@ Windows 独立应用 + Chrome/Edge 浏览器扩展。支持本地 MP4、网页�
 
 解压完整 Windows x64 发行包，双击“一键启动.exe”。不需要 Python、Node、npm 或开发环境。请保留整个文件夹。
 
-BETA下载及每版说明放在[项目发布页](https://github.com/lby749/lby/releases)。只有云端源码检查、Windows构建和独立成品运行检查通过后，工作流才会创建新版本及SHA-256校验文件；已发布版本不覆盖，后续更新须提升package.json版本。
+BETA下载及每版说明放在[项目发布页](https://github.com/lby749/lby/releases)，请选择VideoMemory-Windows-x64.zip。只有云端源码检查、Windows构建和独立成品运行检查通过后，工作流才会创建新版本及SHA-256校验文件；已发布版本不覆盖，后续更新须提升package.json版本。
 
 1. 打开本地视频，或选择网课网址/窗口；学习栏可展开和收起。
 2. 开始记录，结束后到视频库继续复习和提问。
@@ -75,3 +79,5 @@ python -m unittest discover -s desktop -p "test_*.py"
 学习数据默认在本机保存。读取云端模型需要用户自己的连接和授权；截图保存与图片上传是独立操作。不要把本地数据库、浏览器会话、测试视频或凭据提交进仓库。
 
 项目代码使用 [MIT](LICENSE)。第三方依赖与随包运行时声明见 [依赖说明](docs/licenses.md)。品牌图标由项目所有者提供。
+
+感谢您的支持，如果有帮助的话，请点一个 [STAR](https://github.com/lby749/lby)，谢谢！

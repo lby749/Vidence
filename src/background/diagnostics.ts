@@ -55,7 +55,7 @@ export async function buildDiagnostics(): Promise<DiagnosticsReport> {
   return {
     generatedAt: new Date().toISOString(),
     usageToday: await usageToday(),
-    extensionVersion: chrome.runtime.getManifest().version,
+    extensionVersion: chrome.runtime.getManifest().version_name ?? chrome.runtime.getManifest().version,
     browser: { userAgent: navigator.userAgent, platform: platform(), language: navigator.language },
     library: { videos, sessions, evidence, nodes, keyframes, vectors },
     index: indexStatus(),

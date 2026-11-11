@@ -23,3 +23,5 @@
 4K细字/细线H264测试片中，真实存档保持3840宽；薄线对比度约110，旧1280预览放大后约28。脚本为scripts/frame-detail-check.py，测试图是生成素材，不代表真实平台4K账号播放已验收。
 
 实现依据：[Qt QVideoWidget](https://doc.qt.io/qtforpython-6/PySide6/QtMultimediaWidgets/QVideoWidget.html)、[Qt QVideoFrame](https://doc.qt.io/qtforpython-6/PySide6/QtMultimedia/QVideoFrame.html)。
+
+感谢您的支持，如果有帮助的话，请点一个 [STAR](https://github.com/lby749/lby)，谢谢！

@@ -57,3 +57,5 @@
 - 繁体字典开发时由 [OpenCC Python](https://github.com/yichen0831/opencc-python) 0.1.7的s2twp转换生成。只提交生成的界面JSON，运行与打包不依赖该Python库；生成脚本 scripts/generate-traditional-ui.py，词组已作界面检查。
 - Windows启动器附微软签名的WebView2 Evergreen Bootstrapper，缺少组件时联网安装。来源为[微软官方分发指南](https://learn.microsoft.com/en-us/microsoft-edge/webview2/concepts/distribution)及官方链接 https://go.microsoft.com/fwlink/p/?LinkId=2124703；适用微软分发条款，不标为本项目MIT代码。当前固定SHA-256在desktop/launcher.py，构建时已核验Microsoft Corporation的有效Authenticode签名。
 - 未上架商店时，浏览器首次安装需用户确认。流程依据[Edge侧载指南](https://learn.microsoft.com/en-us/microsoft-edge/extensions/getting-started/extension-sideloading)及[Chrome安装分发文档](https://developer.chrome.com/docs/extensions/how-to/distribute/install-extensions)，不使用企业强制安装策略。固定插件目录ID计算参考[Chromium id_util.cc](https://chromium.googlesource.com/chromium/src/+/refs/heads/main/components/crx_file/id_util.cc)。
+
+感谢您的支持，如果有帮助的话，请点一个 [STAR](https://github.com/lby749/lby)，谢谢！

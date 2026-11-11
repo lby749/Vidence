@@ -8,6 +8,7 @@ import { buildDiagnostics } from '@/background/diagnostics';
 import { deleteVideoData } from '@/background/delete-video';
 import type { AppEvent, UiRequest } from '@/shared/messages';
 import { configureDesktopModels, desktopModelRequest } from './local-models';
+import { APP_VERSION } from '@/shared/app-updates';
 
 export interface NativeBridge { [method: string]: (...args: any[]) => void }
 export function nativeCall<T>(native: NativeBridge, method: string, ...args: unknown[]): Promise<T> {
@@ -77,7 +78,7 @@ export async function installDesktopRuntime(native: NativeBridge) {
   const stub = {
     runtime: {
       sendMessage: send, getURL: (file: string) => new URL(file, location.href).href,
-      getManifest: () => ({ version: '0.1.0-desktop' }), getContexts: async () => [{}],
+      getManifest: () => ({ version: APP_VERSION.split('-')[0], version_name: APP_VERSION }), getContexts: async () => [{}],
       connect: () => { const listeners = new Set<(event: AppEvent) => void>(); return { postMessage() {}, onMessage: { addListener: (listener: (event: AppEvent) => void) => { listeners.add(listener); peers.add(listener); } }, onDisconnect: { addListener() {} }, disconnect: () => listeners.forEach(listener => peers.delete(listener)) }; },
     },
     tabs: { getCurrent: async () => ({ id: 1 }), query: async () => [{ id: 1 }] },
