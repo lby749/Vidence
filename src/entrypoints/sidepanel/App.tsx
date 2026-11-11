@@ -1,4 +1,5 @@
 import { Localized, useUiLocale } from '@/ui/i18n';
+import AppUpdates from '@/ui/AppUpdates';
 import { orderForLocale } from '@/ui/locale-order';
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { getSettings, saveSettings } from '@/db/db';
@@ -279,6 +280,7 @@ export default function App() {
         )}
       </div>
 
+      <AppUpdates compact/>
       {toast && <div className="toast">{toast}</div>}
 
       <div className="section">

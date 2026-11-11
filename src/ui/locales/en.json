@@ -568,5 +568,19 @@
   "BETA · 测试版": "BETA · Test version",
   "仅记录画面": "Images only",
   "当前仅有画面。可在提问中允许读图，补充文字记录后再生成长期记忆。": "Only images have been recorded. Allow image reading in chat; add text records before creating long-term memory.",
-  "正在记录画面，未启用文字识别。可让助手读取保存的图片。": "Recording images without text recognition. Your assistant can read saved images."
+  "正在记录画面，未启用文字识别。可让助手读取保存的图片。": "Recording images without text recognition. Your assistant can read saved images.",
+  "应用更新": "App updates",
+  "当前版本": "Current version",
+  "正在检查更新…": "Checking for updates…",
+  "检查更新": "Check for updates",
+  "自动提醒新版本": "Notify me about new versions",
+  "每天检查一次应用版本。": "Checks the app version once a day.",
+  "发现新版本": "New version available",
+  "更新说明": "Release notes",
+  "查看更新": "View update",
+  "稍后提醒": "Remind me later",
+  "更新服务暂不可用，请稍后重试。": "The update service is unavailable. Try again later.",
+  "暂时无法连接更新服务。": "Unable to connect to the update service.",
+  "当前已是最新版本。": "You are up to date.",
+  "检查后可查看是否有新版本。": "Check to see if a new version is available."
 }

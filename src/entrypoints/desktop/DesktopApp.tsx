@@ -12,6 +12,7 @@ import { addRecordedRange } from '@/pipeline/range';
 import type { NormRect, Session, Video } from '@/shared/types';
 import { COURSE_PLATFORMS } from '@/shared/course-platforms';
 import StudySidebar from './StudySidebar';
+import AppUpdates from '@/ui/AppUpdates';
 import { useUiLocale } from '@/ui/i18n';
 import { orderForLocale } from '@/ui/locale-order';
 import { handleSignature, resetVisualState } from '@/background/visual-service';
@@ -248,6 +249,7 @@ export default function DesktopApp({ native }: { native: NativeBridge }) {
   if (view === 'library') return <Localized>{<LibraryApp onNewSource={() => setView('source')}/>}</Localized>;
   return <Localized>{<div className={`page desktop-source-page ${source ? 'player-ready' : ''} ${presentation.attached ? 'is-attached' : ''} ${presentation.fullscreen ? 'is-fullscreen' : ''} ${presentation.collapsed ? 'sidebar-collapsed' : ''}`}>
     <div className="page-header"><img className="brand-mark" src="/brand/icon-128.png" alt="" aria-hidden="true"/><h1 className="page-title">视频记忆助手</h1><span className="beta-badge">BETA · 测试版</span><span className="header-caption">独立应用</span><div className="spacer"/><button className="btn" onClick={() => void showLibrary()}>我的视频库</button></div>
+    {!presentation.attached && !presentation.fullscreen && <AppUpdates compact/>}
     <div className="workspace-intro"><div><span className="eyebrow">从这一刻开始</span><h1>让看过的，成为自己的。</h1><p>本地视频，或正在上课的窗口。选一个，开始学习。</p></div></div>
     <div className="layout source-layout"><main className="panel capture-panel">
       <div className="row player-heading"><strong>{source ? <span translate="no">{title}</span> : '视频预览'}</strong><div className="spacer"/>{source && <><button className="btn ghost" disabled={Boolean(session)} onClick={() => setAdjustingRegion(value => !value)}>{adjustingRegion ? '完成区域调整' : '调整记录区域'}</button><button className="btn ghost" onClick={() => void updatePresentation('attachSidebar').catch(error => setStatus(error.message))}>回到播放器</button><button className="btn ghost" onClick={() => void updatePresentation('fullscreen', true).catch(error => setStatus(error.message))}>全屏播放</button></>}<span className={`pill ${session ? 'ok' : ''}`}>{session ? '记录中' : '尚未记录'}</span></div>

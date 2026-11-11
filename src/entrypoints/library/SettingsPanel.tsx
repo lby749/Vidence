@@ -4,6 +4,7 @@ import type { Settings } from '@/shared/types';
 import { localAgentRequest } from '@/agent/local-agent-client';
 import CapabilityDownloads from './CapabilityDownloads';
 import ApiQuickSetup from './ApiQuickSetup';
+import AppUpdates from '@/ui/AppUpdates';
 import { ANSWER_LANGUAGES, ANSWER_STYLES } from '@/shared/languages';
 import { UI_LANGUAGES, useUiLocale, type UiLanguage } from '@/ui/i18n';
 
@@ -99,6 +100,7 @@ export default function SettingsPanel({ settings, onPatch, onToast, advanced, on
         {category === 'advanced' && <><p className="advanced-intro">日常使用无需调整这些选项。这里保留自定义 AI 服务、性能参数和 Notion 同步。</p>{advanced}<button className="text-button" onClick={onDiagnostics}>查看运行诊断 <span>↗</span></button></>}
       </main>
     </div>
+    <AppUpdates/>
   </div>}</Localized>;
 }
 

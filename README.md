@@ -4,11 +4,11 @@
 
 **0.1.0-beta.1 · MIT**
 
-<p align="center"><img src="assets/brand/project-cover.png" width="520" alt="项目配图：连接知识的星空"/></p>
-
 把看过的视频，变成可以复习、检索和提问的学习记忆。
 
 Windows 独立应用 + Chrome/Edge 浏览器扩展。支持本地 MP4、网页视频与网课窗口；每个视频分别保存画面、聊天和长期记忆。界面提供简体中文、繁体中文和英文，回答语言与风格单独设置。
+
+<p align="center"><img src="assets/brand/project-cover.png" width="360" alt="项目配图：连接知识的星空"/></p>
 
 ## 能做什么
 
@@ -20,10 +20,13 @@ Windows 独立应用 + Chrome/Edge 浏览器扩展。支持本地 MP4、网页�
 - 连接已有 OpenCode Go/DeepSeek Harness，或填入自己的 API Key 自动获取并选择模型。聊天、整理和视觉角色可使用已有配置。
 - 本地关键词查找、可选语义查找和精排；离线资源按“无／低／中／高占用”选择后下载，发行包不包含模型权重。
 - 本地导入导出，导出不携带 API Key、连接令牌或账号。
+- 应用新版本自动提醒，每天检查一次；可查看说明、前往发布页、稍后提醒或关闭自动检查。
 
 ## 普通用户怎么用
 
 解压完整 Windows x64 发行包，双击“一键启动.exe”。不需要 Python、Node、npm 或开发环境。请保留整个文件夹。
+
+BETA下载及每版说明放在[项目发布页](https://github.com/lby749/lby/releases)。只有云端源码检查、Windows构建和独立成品运行检查通过后，工作流才会创建新版本及SHA-256校验文件；已发布版本不覆盖，后续更新须提升package.json版本。
 
 1. 打开本地视频，或选择网课网址/窗口；学习栏可展开和收起。
 2. 开始记录，结束后到视频库继续复习和提问。

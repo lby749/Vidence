@@ -13,6 +13,7 @@
 | src/agent/question-agent.ts | 用户 API 问答及有限轮工具调用 |
 | src/agent/local-agent.ts | 本地智能体问答，核验引用，记录实际图片读取数 |
 | src/agent/long-term-memory.ts | 按视频概括、生成、编辑和召回长期记忆 |
+| src/shared/app-updates.ts | 匿名版本检查、BETA/正式版本比较、每日缓存与暂缓 |
 | src/entrypoints/desktop | 来源选择、原生播放器与右侧学习栏 |
 | src/entrypoints/library | 视频库、知识画面、聊天、设置和下载 |
 | desktop/app.py | Windows 本地播放、窗口采集、Qt/WebView 及本机服务 |
@@ -33,3 +34,5 @@
 打包前准备原生推理运行时：python scripts/prepare-native-runtime.py。然后使用 python scripts/build-desktop.py dist/新的输出目录；脚本拒绝覆盖已有输出。模型权重由最终用户在应用中按档位下载。
 
 普通用户只需解压完整发行包并运行一键启动.exe。开发依赖和运行用户依赖是两回事。
+
+应用更新读取GitHub Releases公开版本元数据，每天一次；不发送课程、图片、账号或API Key。设置可手动检查和关闭自动提醒。草稿、旧版和其他仓库地址不推荐，更新说明按纯文本展示；失败不显示“已是最新版”。私有发布目录尚未公开时，检查会明确不可用。

@@ -27,6 +27,7 @@ npm test
 npm run build
 python -m unittest discover -s desktop -p "test_*.py"
 node scripts/sidebar-layout-check.mjs
+node scripts/update-ui-check.mjs
 ```
 
 - 真实模型测试为 `scripts/knowledge-qa-check.mjs` 和 `scripts/knowledge-frame-review.mjs`，需要用户配置的 OpenCode Go/DSH。它们消耗模型额度，不能在普通单元检查中自动运行。
@@ -34,6 +35,7 @@ node scripts/sidebar-layout-check.mjs
 - 真实窗口、无界面 UI、测试桥接、单元测试、发行包搬移检查属于不同证据层，必须区分。
 - 图片来自 assets/brand/logo-source.png；用 `python scripts/prepare-brand.py` 生成 PNG/ICO。应用、启动器、扩展和品牌标识统一，操作按钮保留语义。
 - 发布前核对源码、构建文件和随包脚本一致，并验证没有系统 Python/Node 的启动路径。不得把缺少 WebView2 的模拟分支称为新装 Windows 实测。
+- 主分支云端源码、成品运行检查通过后才创建 BETA Release；已有发布不覆盖。发布下一版应提升 package.json 版本及 wxt.config.ts 的显示版本，自动提醒只读取公开版本元数据，不发送学习数据或凭据。
 
 ## 尚未完成
 

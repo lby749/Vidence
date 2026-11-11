@@ -11,6 +11,7 @@ import { formatClock, sendUi } from '@/ui/chrome';
 import LongMemoryPage from './LongMemoryPage';
 import VideoConversation from './VideoConversation';
 import SettingsPanel from './SettingsPanel';
+import AppUpdates from '@/ui/AppUpdates';
 import { reviewKnowledgeFrames, isKnowledgeFrame, isUncertainFrame } from '@/agent/knowledge-frames';
 import { videoUrlAt } from '@/ui/chrome';
 
@@ -216,6 +217,7 @@ export default function App({ onNewSource }: { onNewSource?: () => void } = {}) 
         <button className={`btn ${tab === 'memory' ? 'primary' : ''}`} onClick={() => setTab('memory')}>长期记忆</button>
       </div>
 
+      {tab !== 'settings' && <AppUpdates compact/>}
       {toast && <div className="toast">{toast}</div>}
       {tab === 'memory' && <LongMemoryPage videos={videos} onToast={setToast} />}
 
