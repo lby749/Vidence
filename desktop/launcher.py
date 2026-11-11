@@ -277,7 +277,30 @@ def main():
         assert hashlib.sha256((ROOT / 'desktop/runtime/webview2/MicrosoftEdgeWebview2Setup.exe').read_bytes()).hexdigest() == BOOTSTRAP_SHA256
         window.install_panel.show(); window.show(); app.processEvents()
         window.grab().save(str(report_path.with_suffix('.png')))
-        report_path.write_text(json.dumps({'passed': True, 'frozen': FROZEN, 'nativePlaybackAndWebBindingsImported': True, 'bundledNode': node.stdout.strip(), 'extensionFiles': copied_files, 'browsersDetected': window.browsers.count(), 'webviewInstalled': webview_available(), 'languages': list(TEXT), 'noExtensionInstalledDuringCheck': True}, ensure_ascii=False, indent=2), encoding='utf-8')
+        playback = None
+        if '--media' in sys.argv:
+            from PySide6.QtCore import QUrl
+            from PySide6.QtMultimedia import QAudioOutput, QMediaPlayer, QVideoSink
+            media = Path(sys.argv[sys.argv.index('--media') + 1]).resolve()
+            assert media.is_file()
+            player = QMediaPlayer(); audio = QAudioOutput(); audio.setMuted(True)
+            sink = QVideoSink(); player.setAudioOutput(audio); player.setVideoSink(sink)
+            samples = []; sizes = set(); decoded = [0]
+            def read_frame(frame):
+                if not frame.isValid(): return
+                decoded[0] += 1; sizes.add((frame.width(), frame.height()))
+                if decoded[0] in (1, 90):
+                    image = frame.toImage().scaled(64, 36)
+                    assert not image.isNull()
+                    samples.append(hashlib.sha256(bytes(image.constBits())).hexdigest())
+            sink.videoFrameChanged.connect(read_frame)
+            player.setSource(QUrl.fromLocalFile(str(media))); player.play()
+            QTimer.singleShot(4000, app.quit); app.exec()
+            position = player.position(); error = player.errorString(); player.stop()
+            assert not error and position >= 2500 and decoded[0] >= 90 and len(set(samples)) == 2, (position, decoded[0], error)
+            assert sizes == {(1280, 720)}, sizes
+            playback = {'passed': True, 'scope': 'frozen-qt-h264-decode-not-screen-present-rate', 'decodedFrames': decoded[0], 'positionMs': position, 'decodedSizes': sorted(sizes), 'distinctPixelSamples': len(set(samples))}
+        report_path.write_text(json.dumps({'passed': True, 'frozen': FROZEN, 'nativePlaybackAndWebBindingsImported': True, 'bundledNode': node.stdout.strip(), 'extensionFiles': copied_files, 'browsersDetected': window.browsers.count(), 'webviewInstalled': webview_available(), 'languages': list(TEXT), 'noExtensionInstalledDuringCheck': True, 'videoPlayback': playback}, ensure_ascii=False, indent=2), encoding='utf-8')
         return 0
     window.show()
     if '--open' in sys.argv: QTimer.singleShot(0, window.open_app)

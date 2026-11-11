@@ -66,6 +66,11 @@ jobs:
       - run: python scripts/build-desktop.py dist/cloud-beta
       - uses: actions/upload-artifact@v7
         with:
+          name: windows-smoke-media
+          path: artifacts/playback-matrix/720p-60.mp4
+          retention-days: 14
+      - uses: actions/upload-artifact@v7
+        with:
           name: windows-portable-beta
           path: dist/cloud-beta/
           include-hidden-files: true
@@ -88,7 +93,11 @@ jobs:
         with:
           name: windows-portable-beta
           path: portable
-      - run: ./scripts/windows-runtime-check.ps1 -Package "portable/视频记忆助手"
+      - uses: actions/download-artifact@v7
+        with:
+          name: windows-smoke-media
+          path: smoke-media
+      - run: ./scripts/windows-runtime-check.ps1 -Package "portable/视频记忆助手" -Media "smoke-media/720p-60.mp4"
       - uses: actions/upload-artifact@v7
         if: always()
         with:

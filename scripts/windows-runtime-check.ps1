@@ -1,4 +1,4 @@
-param([Parameter(Mandatory=$true)][string]$Package)
+param([Parameter(Mandatory=$true)][string]$Package, [string]$Media)
 $ErrorActionPreference = 'Stop'
 $packagePath = (Resolve-Path -LiteralPath $Package).Path
 $workspacePath = (Get-Location).Path
@@ -13,11 +13,14 @@ try {
     $env:QT_QPA_PLATFORM = 'offscreen'
     Remove-Item Env:PYTHONHOME,Env:PYTHONPATH,Env:NODE_OPTIONS -ErrorAction SilentlyContinue
     if ((Get-Command python -ErrorAction SilentlyContinue) -or (Get-Command node -ErrorAction SilentlyContinue)) { throw 'System development runtimes remain reachable' }
-    $launcher = Start-Process -FilePath (Join-Path $packagePath '一键启动.exe') -ArgumentList @('--self-check', ('"' + $reportPath + '"')) -WindowStyle Hidden -PassThru
+    $arguments = @('--self-check', ('"' + $reportPath + '"'))
+    if ($Media) { $arguments += @('--media', ('"' + (Resolve-Path -LiteralPath $Media).Path + '"')) }
+    $launcher = Start-Process -FilePath (Join-Path $packagePath '一键启动.exe') -ArgumentList $arguments -WindowStyle Hidden -PassThru
     if (-not $launcher.WaitForExit(60000)) { $launcher.Kill(); throw 'Frozen launcher timed out' }
     if ($launcher.ExitCode -ne 0) { throw 'Frozen launcher self-check failed' }
     $report = Get-Content -LiteralPath $reportPath -Raw | ConvertFrom-Json
     if (-not ($report.passed -and $report.frozen -and $report.nativePlaybackAndWebBindingsImported)) { throw 'Frozen bindings were not verified' }
+    if ($Media -and -not $report.videoPlayback.passed) { throw 'Frozen video playback was not verified' }
     & (Join-Path $packagePath '_internal/runtime/node.exe') (Join-Path $workspacePath 'scripts/packaged-bridge-check.mjs') (Join-Path $packagePath '_internal')
     if ($LASTEXITCODE -ne 0) { throw 'Bundled bridge failed' }
     $report | Add-Member -NotePropertyName cleanHostedRunner -NotePropertyValue ($env:GITHUB_ACTIONS -eq 'true')
