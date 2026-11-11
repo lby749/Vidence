@@ -1,0 +1,95 @@
+name: QQ Dot clean install and full regression
+on:
+  push:
+    branches: [qqdot-beta-validation-20261111]
+    paths: [qqdot-acceptance/**, .github/workflows/qqdot-acceptance.yml]
+permissions:
+  contents: read
+jobs:
+  linux:
+    runs-on: ubuntu-latest
+    timeout-minutes: 50
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          persist-credentials: false
+      - name: Verify exact source and extract
+        run: |
+          echo '6fd1c5fd0f69c5ca078d523466f903a956e4101fed345d025dcf02109cb5360c  qqdot-acceptance/source.zip' | sha256sum --check
+          unzip -q qqdot-acceptance/source.zip
+          mkdir evidence-linux
+          cp qqdot-acceptance/source.sha256 evidence-linux/source.sha256
+      - name: Cold Linux install, reuse and complete test suite
+        run: |
+          docker pull ubuntu@sha256:fe81560990fae86dc4743202b2cb4d3df98d0bcf949173cecef15ce1127ef852
+          docker run --name qqdot-linux -v "$PWD:/input:ro" -v "$PWD/evidence-linux:/evidence" ubuntu@sha256:fe81560990fae86dc4743202b2cb4d3df98d0bcf949173cecef15ce1127ef852 bash /input/qqdot-acceptance/linux.sh
+      - uses: actions/upload-artifact@v7
+        if: always()
+        with:
+          name: qqdot-linux-full
+          path: evidence-linux/
+          retention-days: 14
+  windows-build:
+    runs-on: windows-2022
+    timeout-minutes: 50
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          persist-credentials: false
+      - uses: actions/setup-python@v7
+        with:
+          python-version: '3.13'
+      - name: Verify exact source and extract
+        shell: pwsh
+        run: |
+          if ((Get-FileHash qqdot-acceptance/source.zip -Algorithm SHA256).Hash.ToLower() -ne '6fd1c5fd0f69c5ca078d523466f903a956e4101fed345d025dcf02109cb5360c') { throw 'Source snapshot mismatch' }
+          Expand-Archive -LiteralPath qqdot-acceptance/source.zip -DestinationPath .
+      - name: Complete Windows test suite and build installer
+        shell: pwsh
+        run: ./qqdot-acceptance/windows-build.ps1
+      - uses: actions/upload-artifact@v7
+        with:
+          name: qqdot-installer-candidate
+          path: installer/Setup.exe
+          if-no-files-found: error
+          retention-days: 14
+      - uses: actions/upload-artifact@v7
+        if: always()
+        with:
+          name: qqdot-windows-full
+          path: evidence-windows/
+          retention-days: 14
+      - name: Require complete suite success
+        shell: pwsh
+        run: |
+          if ((Get-Content evidence-windows/test-exit.txt).Trim() -ne '0') { throw 'Complete Windows suite failed; see original log and XML' }
+  windows-cold:
+    needs: windows-build
+    if: always()
+    runs-on: windows-2022
+    timeout-minutes: 40
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          persist-credentials: false
+      - uses: actions/download-artifact@v7
+        with:
+          name: qqdot-installer-candidate
+          path: installer
+      - name: No-Python Windows installation and repair
+        shell: pwsh
+        run: |
+          New-Item -ItemType Directory -Force evidence-cold | Out-Null
+          Copy-Item -LiteralPath qqdot-acceptance/windows-cold.ps1 -Destination installer/cold.ps1
+          $service = Get-Service docker -ErrorAction SilentlyContinue
+          if ($service -and $service.Status -ne 'Running') { Start-Service docker }
+          docker pull mcr.microsoft.com/windows/servercore@sha256:301d571fc0cffed67083d4cc7a10167f551212f76b3f91eb7457e89aa5a183da
+          if ($LASTEXITCODE -ne 0) { throw 'Clean Windows image unavailable' }
+          docker run --name qqdot-cold -v "${pwd}\installer:C:\input:ro" -v "${pwd}\evidence-cold:C:\evidence" mcr.microsoft.com/windows/servercore@sha256:301d571fc0cffed67083d4cc7a10167f551212f76b3f91eb7457e89aa5a183da powershell -NoProfile -ExecutionPolicy Bypass -File C:\input\cold.ps1
+          if ($LASTEXITCODE -ne 0) { throw 'Actual no-Python installation failed; inspect evidence' }
+      - uses: actions/upload-artifact@v7
+        if: always()
+        with:
+          name: qqdot-windows-cold
+          path: evidence-cold/
+          retention-days: 14
