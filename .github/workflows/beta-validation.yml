@@ -10,6 +10,7 @@ jobs:
     runs-on: ubuntu-latest
     env:
       E2E_BROWSER: chromium
+      E2E_HEADLESS: '1'
     steps:
       - uses: actions/checkout@v7
         with:

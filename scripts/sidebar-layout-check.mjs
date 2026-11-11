@@ -5,6 +5,7 @@ import path from 'node:path';
 import http from 'node:http';
 import { chromium } from 'playwright';
 const root=path.resolve('.output/chrome-mv3');
+fs.mkdirSync('artifacts',{recursive:true});
 const server=http.createServer((request,response)=>{
   const pathname=new URL(request.url,'http://localhost').pathname;
   if(pathname==='/qwebchannel.js'){response.setHeader('Content-Type','text/javascript');response.end('window.QWebChannel=function(transport,callback){callback({objects:{native:window.qaNative}})}');return;}

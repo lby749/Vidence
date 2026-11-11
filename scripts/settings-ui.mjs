@@ -5,6 +5,7 @@ import path from 'node:path';
 import { chromium } from 'playwright';
 
 const ext = path.resolve('.output/chrome-mv3');
+fs.mkdirSync('artifacts', { recursive: true });
 const context = await chromium.launchPersistentContext(fs.mkdtempSync(path.join(os.tmpdir(), 'vma-settings-')), {
   channel: process.env.E2E_BROWSER ?? 'msedge', headless: true, locale:'zh-CN', viewport: { width: 1440, height: 1020 },
   args: [`--load-extension=${ext}`, `--disable-extensions-except=${ext}`, '--disable-gpu', '--no-first-run'],

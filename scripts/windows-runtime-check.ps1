@@ -20,7 +20,7 @@ try {
     if (-not ($report.passed -and $report.frozen -and $report.nativePlaybackAndWebBindingsImported)) { throw 'Frozen bindings were not verified' }
     & (Join-Path $packagePath '_internal/runtime/node.exe') (Join-Path $workspacePath 'scripts/packaged-bridge-check.mjs') (Join-Path $packagePath '_internal')
     if ($LASTEXITCODE -ne 0) { throw 'Bundled bridge failed' }
-    $report | Add-Member -NotePropertyName cleanHostedRunner -NotePropertyValue $true
+    $report | Add-Member -NotePropertyName cleanHostedRunner -NotePropertyValue ($env:GITHUB_ACTIONS -eq 'true')
     $report | Add-Member -NotePropertyName preinstalledDeveloperTools -NotePropertyValue $inventory
     $report | Add-Member -NotePropertyName systemRuntimesOnTargetPath -NotePropertyValue $false
     $report | Add-Member -NotePropertyName physicallyEmptyWindows -NotePropertyValue $false

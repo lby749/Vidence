@@ -1,4 +1,5 @@
 import json
+import hashlib
 import os
 from pathlib import Path
 import tempfile
@@ -28,14 +29,18 @@ class LauncherTests(unittest.TestCase):
 
     def test_missing_webview_uses_bundled_setup_and_retains_local_fallback(self):
         window = Launcher()
-        with patch('launcher.focus_app', return_value=False), patch('launcher.webview_available', return_value=False), patch('launcher.QProcess') as process:
-            window.open_app()
-            program, args = process.return_value.start.call_args.args
-            self.assertTrue(program.endswith('MicrosoftEdgeWebview2Setup.exe'))
-            self.assertEqual(args, ['/silent', '/install'])
-            window.runtime_finished(1)
-            self.assertFalse(window.local_button.isHidden())
-            self.assertTrue(window.open_button.isEnabled())
+        with tempfile.TemporaryDirectory() as directory:
+            root = Path(directory)
+            setup = root / 'desktop/runtime/webview2/MicrosoftEdgeWebview2Setup.exe'
+            setup.parent.mkdir(parents=True); setup.write_bytes(b'unit-test-installer-not-executable')
+            with patch('launcher.ROOT', root), patch('launcher.BOOTSTRAP_SHA256', hashlib.sha256(setup.read_bytes()).hexdigest()), patch('launcher.focus_app', return_value=False), patch('launcher.webview_available', return_value=False), patch('launcher.QProcess') as process:
+                window.open_app()
+                program, args = process.return_value.start.call_args.args
+                self.assertEqual(Path(program), setup)
+                self.assertEqual(args, ['/silent', '/install'])
+                window.runtime_finished(1)
+                self.assertFalse(window.local_button.isHidden())
+                self.assertTrue(window.open_button.isEnabled())
 
     def test_language_and_installer_do_not_claim_silent_extension_install(self):
         self.assertEqual(len({len(text) for text in TEXT.values()}), 1)
@@ -45,6 +50,7 @@ class LauncherTests(unittest.TestCase):
             self.assertEqual(window.steps.text(), TEXT[locale][9])
         self.assertTrue(window.path.isReadOnly())
 
+    @unittest.skipUnless(os.name == 'nt', 'Windows DLL search path behavior')
     def test_external_program_library_path_is_restored_after_failure(self):
         original_path = str(ROOT) + os.pathsep + r'C:\Windows\System32'
         with patch.dict(os.environ, PATH=original_path), patch('launcher.FROZEN', True), patch('ctypes.windll.kernel32.SetDllDirectoryW') as set_path:

@@ -32,6 +32,8 @@ shutil.copy2(work / 'build/launcher/一键启动.exe', output / '一键启动.ex
 destination = output / '_internal/desktop/runtime/webview2'
 destination.mkdir(parents=True, exist_ok=True)
 shutil.copy2(runtime, destination / runtime.name)
+for source, name in [(root / 'LICENSE', 'LICENSE.txt'), (root / 'docs/licenses.md', '第三方声明.md'), (root / 'public/brand/app.ico', '应用图标.ico')]:
+    shutil.copy2(source, output / name)
 for name, arguments in [('启动视频记忆助手.cmd', '--open'), ('一键安装到浏览器.cmd', '--install-browser')]:
     (output / name).write_bytes(('@echo off\r\nchcp 65001 >nul\r\nstart "" "%~dp0一键启动.exe" ' + arguments + '\r\n').encode('utf-8'))
 (output / '使用说明.txt').write_text('''视频记忆助手 · Windows 10/11 x64
