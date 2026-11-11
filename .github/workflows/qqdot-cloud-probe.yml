@@ -1,0 +1,48 @@
+name: QQ Dot cloud baseline probe
+on:
+  push:
+    branches: [qqdot-beta-validation-20261111]
+    paths: [.github/workflows/qqdot-cloud-probe.yml]
+permissions:
+  contents: read
+jobs:
+  linux:
+    runs-on: ubuntu-latest
+    timeout-minutes: 12
+    steps:
+      - name: Bare Linux image baseline
+        run: |
+          mkdir evidence
+          docker pull ubuntu:24.04
+          docker image inspect ubuntu:24.04 --format '{{json .RepoDigests}}' | tee evidence/image.txt
+          docker run --rm ubuntu:24.04 sh -c 'cat /etc/os-release; for x in python python3 pip node npm uv curl; do if command -v "$x"; then exit 1; else echo "$x absent"; fi; done' | tee evidence/baseline.txt
+      - uses: actions/upload-artifact@v7
+        if: always()
+        with:
+          name: qqdot-linux-baseline
+          path: evidence/
+  windows:
+    runs-on: windows-2022
+    timeout-minutes: 20
+    steps:
+      - name: Inventory Windows container capability
+        shell: pwsh
+        run: |
+          New-Item -ItemType Directory evidence | Out-Null
+          Get-Command python,node,docker -ErrorAction SilentlyContinue | Select-Object Name,Source | ConvertTo-Json | Set-Content evidence/host-tools.json
+          $service = Get-Service docker -ErrorAction SilentlyContinue
+          if ($service -and $service.Status -ne 'Running') { Start-Service docker }
+          docker version *> evidence/docker-version.txt
+          if ($LASTEXITCODE -ne 0) { throw 'Windows container engine unavailable; no clean-Windows claim' }
+          $kind = docker info --format '{{.OSType}}'
+          if ($kind -ne 'windows') { throw 'Not a Windows container engine; no clean-Windows claim' }
+          docker pull mcr.microsoft.com/windows/servercore:ltsc2022
+          if ($LASTEXITCODE -ne 0) { throw 'Clean Windows image download failed' }
+          docker image inspect mcr.microsoft.com/windows/servercore:ltsc2022 --format '{{json .RepoDigests}}' | Set-Content evidence/image.txt
+          docker run --rm mcr.microsoft.com/windows/servercore:ltsc2022 powershell -NoProfile -Command '$ErrorActionPreference="Stop"; [Environment]::OSVersion.VersionString; foreach($name in @("python","python3","pip","node","npm","uv")){if(Get-Command $name -ErrorAction SilentlyContinue){throw "Unexpected runtime: $name"};Write-Output "$name absent"}' *> evidence/baseline.txt
+          if ($LASTEXITCODE -ne 0) { throw 'Clean Windows container baseline failed' }
+      - uses: actions/upload-artifact@v7
+        if: always()
+        with:
+          name: qqdot-windows-baseline
+          path: evidence/
