@@ -129,7 +129,7 @@ export async function handleSignature(
         return;
       }
     }
-    await saveKeyframe(session, sig, input.time, 'auto-change', animated ? '动态画面中的代表帧' : decision?.reason.join('；') || '记录起点', settings.capture.maxFrameWidth, state, onEvent, input.captureFrame ? () => input.captureFrame!(settings.capture.maxFrameWidth) : input.frame, input.duration);
+    await saveKeyframe(session, sig, input.time, 'auto-change', animated ? '动态画面中的代表帧' : decision?.reason.join('；') || '记录起点', settings.capture.maxFrameWidth, state, onEvent, input.captureFrame ? () => input.captureFrame!(settings.capture.maxFrameWidth) : input.frame, input.duration, animated);
     state.candidate = null;
   } finally { state.busy = false; }
 }
@@ -145,6 +145,7 @@ async function saveKeyframe(
   onEvent?: (event: VisualEvent) => void,
   providedFrame?: FrameResult | (() => Promise<FrameResult>),
   duration?: number,
+  animated = false,
 ): Promise<void> {
   const settings = await getSettings();
   const budget = settings.capture.keyframeBudget;
@@ -159,7 +160,7 @@ async function saveKeyframe(
     return;
   }
 
-  if (attempt.frame.signature && !isFrameStable(sig, attempt.frame.signature)) return;
+  if (attempt.frame.signature && !isFrameStable(sig, attempt.frame.signature) && !(animated && diffSignatures(sig, attempt.frame.signature).global < 0.15)) return;
   sig = attempt.frame.signature ?? sig;
   if (!hasFrameContent(sig)) return;
   const fingerprint = fingerprintOf(sig), db = getDb();

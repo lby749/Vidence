@@ -95,3 +95,13 @@ it('地球旋转这类持续动画不能一直等到静止才留画面', async (
   }
   expect(await db.keyframes.count()).toBeGreaterThan(0);
 });
+
+it.each([false, true])('持续运动的高清帧允许同场景运动，拒绝转场（转场=%s）', async sceneCut => {
+  const captureFrame = vi.fn(async () => ({ ...frame, signature: { cols: 12, rows: 8, width: 320, height: 180, cells: pattern().map(value => sceneCut ? 255 - value : value + 12) } }));
+  for (let index = 0; index <= 4; index++) {
+    now = 100_000 + index * 2500;
+    await handleSignature(active, { sessionId: active.sessionId, epoch: 1, time: index * 2.5, cols: 12, rows: 8, width: 320, height: 180, cells: pattern().map((value, cell) => value + (cell % 3 === 0 && index % 2 ? 60 : 0)), captureFrame });
+  }
+  expect(captureFrame).toHaveBeenCalled();
+  expect(await db.keyframes.count()).toBe(sceneCut ? 0 : 1);
+});
