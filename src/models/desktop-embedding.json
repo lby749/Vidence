@@ -1,0 +1,11 @@
+{
+  "modelId": "second-state/embeddinggemma-300m-GGUF",
+  "revision": "e22086a58b257f2dd537979bc44822d7f97a0fdb",
+  "name": "embeddinggemma-300m-Q4_K_M.gguf",
+  "url": "https://huggingface.co/second-state/embeddinggemma-300m-GGUF/resolve/e22086a58b257f2dd537979bc44822d7f97a0fdb/embeddinggemma-300m-Q4_K_M.gguf",
+  "bytes": 236337120,
+  "sha256": "2decb24229f3876b66edee3f0c825edcf3ac46206819ec51aff29fd97e8ce529",
+  "dimension": 768,
+  "queryInstruction": "task: search result | query: ",
+  "documentInstruction": "title: none | text: "
+}

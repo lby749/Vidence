@@ -1,0 +1,30 @@
+{
+  "project": "https://github.com/ggml-org/llama.cpp",
+  "revision": "b11597",
+  "platforms": {
+    "windows-x86_64-cpu": {
+      "name": "llama-b11597-bin-win-cpu-x64.zip",
+      "url": "https://github.com/ggml-org/llama.cpp/releases/download/b11597/llama-b11597-bin-win-cpu-x64.zip",
+      "bytes": 19514314,
+      "digest": "sha256:24b88c8de6ec0f96530f691950daed817cc408640f11c3564e62ab86d5483500"
+    },
+    "windows-x86_64-vulkan": {
+      "name": "llama-b11597-bin-win-vulkan-x64.zip",
+      "url": "https://github.com/ggml-org/llama.cpp/releases/download/b11597/llama-b11597-bin-win-vulkan-x64.zip",
+      "bytes": 32127462,
+      "digest": "sha256:9908854d9993e7e415a63619624095c30994c423562d683eda7014ec27565d9b"
+    },
+    "darwin-arm64-metal": {
+      "name": "llama-b11597-bin-macos-arm64.tar.gz",
+      "url": "https://github.com/ggml-org/llama.cpp/releases/download/b11597/llama-b11597-bin-macos-arm64.tar.gz",
+      "bytes": 12112121,
+      "digest": "sha256:b972c1efc7fa24b070f4e2009569ffac73963ac3939233af9440ef670d34399c"
+    },
+    "darwin-x86_64-metal": {
+      "name": "llama-b11597-bin-macos-x64.tar.gz",
+      "url": "https://github.com/ggml-org/llama.cpp/releases/download/b11597/llama-b11597-bin-macos-x64.tar.gz",
+      "bytes": 11609226,
+      "digest": "sha256:1c0468b450476b81f129f0beb7e09e8917e4e22d450c05187b70f58d7487c66e"
+    }
+  }
+}

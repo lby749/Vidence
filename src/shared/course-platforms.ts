@@ -1,0 +1,20 @@
+/** 入口是公开首页；具体课程仍由用户在已登录浏览器中打开。 */
+export const COURSE_PLATFORMS = [
+  { label: '作业帮（一课客户端）' }, { label: '高途' },
+  { label: 'Bilibili', url: 'https://www.bilibili.com/' },
+  { label: 'YouTube', url: 'https://www.youtube.com/' },
+  { label: '抖音', url: 'https://www.douyin.com/' },
+  { label: '学而思', url: 'https://www.xueersi.com/' },
+  { label: '中国大学 MOOC', url: 'https://www.icourse163.org/' },
+  { label: '学堂在线', url: 'https://www.xuetangx.com/' },
+  { label: '智慧树', url: 'https://www.zhihuishu.com/' },
+  { label: '学习通', url: 'https://www.chaoxing.com/' },
+  { label: '国家智慧教育平台', url: 'https://www.smartedu.cn/' },
+  { label: '网易公开课', url: 'https://open.163.com/' },
+  { label: 'Coursera', url: 'https://www.coursera.org/' },
+  { label: 'edX', url: 'https://www.edx.org/' },
+  { label: 'Udemy', url: 'https://www.udemy.com/' },
+  { label: 'Khan Academy', url: 'https://www.khanacademy.org/' },
+  { label: 'LinkedIn Learning', url: 'https://www.linkedin.com/learning/' },
+  { label: '自定义网址 / 其他播放器' },
+];

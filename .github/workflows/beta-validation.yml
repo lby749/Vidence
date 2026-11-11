@@ -1,0 +1,95 @@
+name: BETA clean checkout and portable Windows
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  source:
+    runs-on: ubuntu-latest
+    env:
+      E2E_BROWSER: chromium
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          persist-credentials: false
+      - uses: actions/setup-node@v7
+        with:
+          node-version: '24'
+          package-manager-cache: false
+      - run: npm ci
+      - run: npm run compile
+      - run: npm test
+      - run: npm run build
+      - run: npx playwright install --with-deps chromium
+      - run: npm run e2e
+      - run: node scripts/sidebar-layout-check.mjs
+      - run: node scripts/bridge-check.mjs
+      - uses: actions/upload-artifact@v7
+        if: always()
+        with:
+          name: linux-source-evidence
+          path: artifacts/
+  windows-build:
+    runs-on: windows-latest
+    env:
+      PYTHONUTF8: '1'
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          persist-credentials: false
+      - uses: actions/setup-node@v7
+        with:
+          node-version: '24'
+          package-manager-cache: false
+      - uses: actions/setup-python@v7
+        with:
+          python-version: '3.12'
+      - run: npm ci
+      - run: python -m pip install -r requirements-dev.txt
+      - run: npm run compile
+      - run: npm test
+      - run: npm run build
+      - run: python -m unittest discover -s desktop -p "test_*.py"
+      - run: node scripts/sidebar-layout-check.mjs
+      - run: node scripts/settings-ui.mjs
+      - run: choco install ffmpeg --yes --no-progress
+      - run: python scripts/frame-detail-check.py
+      - run: python scripts/playback-matrix.py
+      - run: ffmpeg -hide_banner -loglevel error -f lavfi -i testsrc2=size=1920x1080:rate=15 -t 110 -c:v libx264 -preset ultrafast -crf 30 -pix_fmt yuv420p artifacts/cloud-fixture.mp4
+      - run: node scripts/desktop-keyframes-check.mjs --no-ocr
+        env:
+          E2E_VIDEO: artifacts/cloud-fixture.mp4
+      - run: python scripts/prepare-native-runtime.py
+      - run: python scripts/build-desktop.py dist/cloud-beta
+      - uses: actions/upload-artifact@v7
+        with:
+          name: windows-portable-beta
+          path: dist/cloud-beta/
+          include-hidden-files: true
+          retention-days: 14
+      - uses: actions/upload-artifact@v7
+        if: always()
+        with:
+          name: windows-source-evidence
+          path: |
+            artifacts/*.json
+            artifacts/*.png
+  windows-runtime:
+    needs: windows-build
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          persist-credentials: false
+      - uses: actions/download-artifact@v7
+        with:
+          name: windows-portable-beta
+          path: portable
+      - run: ./scripts/windows-runtime-check.ps1 -Package "portable/视频记忆助手"
+      - uses: actions/upload-artifact@v7
+        if: always()
+        with:
+          name: windows-runtime-evidence
+          path: artifacts/cloud-runtime.json

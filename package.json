@@ -1,0 +1,51 @@
+{
+  "name": "video-memory-assistant",
+  "private": true,
+  "version": "0.1.0-beta.1",
+  "type": "module",
+  "description": "开源浏览器视频记忆助手：边看边记录、可检索、可向 AI 应用提问的个人视频记忆库",
+  "license": "MIT",
+  "scripts": {
+    "dev": "wxt",
+    "dev:edge": "wxt -b edge",
+    "build": "wxt build",
+    "prebuild": "node scripts/prepare-runtime.mjs",
+    "prebuild:edge": "node scripts/prepare-runtime.mjs",
+    "prebuild:firefox": "node scripts/prepare-runtime.mjs",
+    "build:edge": "wxt build -b edge",
+    "build:firefox": "wxt build -b firefox",
+    "zip": "node scripts/prepare-runtime.mjs && wxt zip",
+    "compile": "tsc --noEmit",
+    "test": "vitest run",
+    "test:watch": "vitest",
+    "e2e": "node scripts/e2e.mjs",
+    "test:ui": "node scripts/settings-ui.mjs",
+    "test:models": "node scripts/model-smoke.mjs",
+    "desktop": "python desktop/app.py",
+    "desktop:pack": "npm run build && python scripts/build-desktop.py",
+    "verify": "npm run compile && npm test && npm run build && npm run e2e",
+    "postinstall": "wxt prepare"
+  },
+  "dependencies": {
+    "@huggingface/transformers": "^4.3.2",
+    "@orama/orama": "^3.1.18",
+    "@orama/tokenizers": "^3.1.18",
+    "@paddleocr/paddleocr-js": "^0.4.2",
+    "dexie": "^4.4.7",
+    "js-yaml": "^4.3.2",
+    "react": "^19.3.1",
+    "react-dom": "^19.3.1"
+  },
+  "devDependencies": {
+    "@types/chrome": "^0.1.40",
+    "@types/react": "^19.2.14",
+    "@types/react-dom": "^19.2.4",
+    "@vitejs/plugin-react": "^5.1.2",
+    "@wxt-dev/module-react": "^1.2.2",
+    "fake-indexeddb": "^6.2.5",
+    "playwright": "^1.65.0",
+    "typescript": "^5.9.3",
+    "vitest": "^4.0.18",
+    "wxt": "^0.21.5"
+  }
+}
