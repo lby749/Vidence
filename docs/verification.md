@@ -14,6 +14,21 @@
 
 尚未验收：物理空白Windows及真实缺少WebView2的安装、全部网页原生全屏场景、Apple/AMD实机、所有平台账号流程。Android、TTS、听视频ASR未实现，iPhone暂缓。不能依据一个检查层替代另一个。
 
+## Vidence BETA.3 云端与公开验收
+
+更名后的目标源码ff7d3895df74759cff31bd46461ad9c7bb160b19，版本0.1.0-beta.3。[完整云端运行42982169455](https://github.com/lby749/Vidence/actions/runs/42982169455)的source、windows-build、windows-runtime和release四项均通过。
+
+- Linux与Windows从干净检出重新安装锁定依赖，145项Vitest、TypeScript和生产构建通过；Windows另有17项Python检查。侧栏、设置、三语言更新/反馈界面、扩展闭环与桥接通过各自检查。
+- 原生720p60、1080p59.94/29.97、4K23.976/60的H264解码交付通过；高清存档3840宽，预览1280宽；持续运动生成片无OCR记录检查通过。
+- 另一台Windows runner运行同一份冻结成品，目标PATH仅System32，未安装项目开发依赖：真实解码225帧、3733ms、1280×720，两次像素取样不同，包内Node桥接通过。不将此写成最终显示器呈现率。
+- 云端检查完成后发布[Vidence BETA.3](https://github.com/lby749/Vidence/releases/tag/v0.1.0-beta.3)。文件名Vidence-Windows-x64.zip，359145894字节，SHA-256为bb8bf042431cc52d04ed211f29887b226dca0126860de4308ca1ea7dfef053a8。
+- 新更新服务源码在独立浏览器中匿名访问Vidence真实发布API，HTTP200，能读取本版且不重复推荐已安装版本；更新与反馈UI另用隔离目录验证可推荐、暂缓、关闭及手动重试。真实网络检查不说成已安装旧版EXE的更新UI验收。
+- 本机新版EXE实际启动，界面标题Vidence，右侧学习栏与视频真实解码通过；测试结束暂停并关闭。3488个本机成品文件搬移后逐个哈希匹配，两个EXE内嵌代码与当前Python源码一致，41个前端文件与当前生产构建一致，保留250份原始依赖声明。
+
+仓库已确认公开、MIT、Issues开启，应用和文档使用新的反馈地址。更名保留原学习数据目录。BETA.1/BETA.2需手动安装一次新版，不宣称旧地址仍能自动更新。
+
+原生窗口与无界面测试不会覆盖全部用户流程；英文界面仍有少量动态计数字样未完整翻译。物理空白Windows、真实缺少WebView2安装、Apple/AMD实机及其他未覆盖项目仍按上面的边界标注。
+
 ## BETA.2 云端与公开验收（更名前历史记录）
 
 目标源码834d0ae6a92bd1792592e13b97699b08f3f6558a，版本0.1.0-beta.2。[完整云端运行42977214404](https://github.com/lby749/Vidence/actions/runs/42977214404)的source、windows-build、windows-runtime和release四项均通过。

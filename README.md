@@ -48,7 +48,7 @@ BETA下载及每版说明放在[项目发布页](https://github.com/lby749/Viden
 - OpenCode Go 的 DeepSeek V4.1 Flash 真图片问答：有图读出公式；无图不猜测；换图后答案跟随实际图片。
 - 图片引用预览、讲者/片尾过滤、待确认、人工恢复以及侧栏图片选项。
 - TypeScript、145项单元检查、17项Python检查，以及本机可搬移打包检查。
-- Linux/Windows云端源码验收、另一台Windows上的冻结程序真实解码与包内运行时检查，完成后自动发布BETA.2。
+- Linux/Windows云端源码验收、另一台Windows上的冻结程序真实解码与包内运行时检查，[BETA.3完整运行](https://github.com/lby749/Vidence/actions/runs/42982169455)四项任务通过后已自动发布。
 
 这些检查不等于所有平台账号、硬件和播放器场景均已验收。图片分类可能误判，模型抄读也可能有错；可以打开原图核对。完整功能状态与重复入口审查见 [功能审查](docs/feature-audit.md)。播放测试见 [帧率与清晰度](docs/playback.md)。详见 [知识画面](docs/keyframes.md) 和 [验收说明](docs/verification.md)。
 
