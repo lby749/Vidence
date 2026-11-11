@@ -30,6 +30,8 @@
 
 独立应用使用已安装 PySide6 6.11.2 / Qt 组件（包元数据：LGPL-3.0-only OR GPL-2.0-only OR GPL-3.0-only）、Python、Node.js 及 js-yaml。打包保留动态库与组件来源说明，构建脚本在 scripts/build-desktop.py；第三方程序运行时不等于模型权重。源码修改可在 desktop/app.py 与 src/entrypoints/desktop 中查看和重新构建。
 
+构建会用scripts/prepare-notices.py将已安装npm依赖、Python和PySide元数据中的原始声明保留到_internal/notices；Node声明按实际随包版本获取，另保留Qt的LGPL/GPL原文。保留这些依赖的原许可证，不将它们重新声明为项目MIT代码。
+
 ## 参考项目（未复制代码）
 
 以下项目仅用于参考设计思路，代码未直接包含在本仓库：

@@ -53,6 +53,7 @@ if icu.exists():
         if unused_data.exists(): unused_data.unlink()
 assert not any(file.suffix.lower() in ('.onnx', '.tar', '.gguf', '.safetensors') for file in output.rglob('*'))
 subprocess.run([sys.executable, str(root / 'scripts/build-launcher.py'), str(output)], cwd=root, check=True)
+subprocess.run([sys.executable, str(root / 'scripts/prepare-notices.py'), str(output)], cwd=root, check=True)
 report = {'output': str(output), 'bytes': sum(file.stat().st_size for file in output.rglob('*') if file.is_file()), 'bundledModelWeights': 0}
 (root / 'artifacts/desktop-package.json').write_text(json.dumps(report, ensure_ascii=False, indent=2), encoding='utf-8')
 print(json.dumps(report, ensure_ascii=True))
