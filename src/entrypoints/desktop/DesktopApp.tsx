@@ -248,7 +248,7 @@ export default function DesktopApp({ native }: { native: NativeBridge }) {
   </div>;
   if (view === 'library') return <Localized>{<LibraryApp onNewSource={() => setView('source')}/>}</Localized>;
   return <Localized>{<div className={`page desktop-source-page ${source ? 'player-ready' : ''} ${presentation.attached ? 'is-attached' : ''} ${presentation.fullscreen ? 'is-fullscreen' : ''} ${presentation.collapsed ? 'sidebar-collapsed' : ''}`}>
-    <div className="page-header"><img className="brand-mark" src="/brand/icon-128.png" alt="" aria-hidden="true"/><h1 className="page-title">视频记忆助手</h1><span className="beta-badge">BETA · 测试版</span><span className="header-caption">独立应用</span><div className="spacer"/><button className="btn" onClick={() => void showLibrary()}>我的视频库</button></div>
+    <div className="page-header"><img className="brand-mark" src="/brand/icon-128.png" alt="" aria-hidden="true"/><h1 className="page-title">Vidence</h1><span className="beta-badge">BETA · 测试版</span><span className="header-caption">独立应用</span><div className="spacer"/><button className="btn" onClick={() => void showLibrary()}>我的视频库</button></div>
     {!presentation.attached && !presentation.fullscreen && <AppUpdates compact/>}
     <div className="workspace-intro"><div><span className="eyebrow">从这一刻开始</span><h1>让看过的，成为自己的。</h1><p>本地视频，或正在上课的窗口。选一个，开始学习。</p></div></div>
     <div className="layout source-layout"><main className="panel capture-panel">

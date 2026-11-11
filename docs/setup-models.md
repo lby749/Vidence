@@ -61,4 +61,4 @@ node scripts/fetch-models.mjs 仅用于准备本机开发测试资源，不是�
 
 npm run desktop 启动源码应用；npm run desktop:pack 生成 Windows 程序目录。运行模型自检需要保留本机测试资源，测试报告明确区分本机测试文件提供的下载与真实公网请求。
 
-感谢您的支持，如果有帮助的话，请点一个 [STAR](https://github.com/lby749/lby)，谢谢！
+感谢您的支持，如果有帮助的话，请点一个 [STAR](https://github.com/lby749/Vidence)，谢谢！

@@ -82,14 +82,14 @@ function render(): void {
   const paused = currentState === 'paused';
   const starting = currentState === 'starting';
   const label =
-    currentState === 'recording' ? '记录中' : currentState === 'paused' ? '已暂停' : currentState === 'starting' ? '启动中…' : currentState === 'error' ? (errorMessage.includes('扩展已') ? '刷新重连' : '启动失败') : '视频记忆';
+    currentState === 'recording' ? '记录中' : currentState === 'paused' ? '已暂停' : currentState === 'starting' ? '启动中…' : currentState === 'error' ? (errorMessage.includes('扩展已') ? '刷新重连' : '启动失败') : 'Vidence';
 
   const status = text(label);
 
   shadowRoot.innerHTML = `
     <style>${STYLE}</style>
     <div class="wrap">
-      <div class="pill" id="pill" role="button" tabindex="0" aria-label="${text('视频记忆助手')}">
+      <div class="pill" id="pill" role="button" tabindex="0" aria-label="${text('Vidence')}">
         <span class="mark ${recording ? 'rec' : ''}"><img src="${chrome.runtime.getURL('brand/icon-48.png')}" alt=""/></span>
         <span class="label">${status}</span>
         <span class="time" id="time">${currentElapsed > 0 ? formatElapsed(currentElapsed) : ''}</span>

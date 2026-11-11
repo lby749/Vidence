@@ -56,7 +56,7 @@ class PlayerWindow(QMainWindow):
         super().__init__()
         self.controller, self.bridge = controller, bridge
         self.before_fullscreen_collapsed = False
-        self.setWindowTitle(bridge.ui_text('视频播放 · 视频记忆助手'))
+        self.setWindowTitle(bridge.ui_text('视频播放 · Vidence'))
         self.resize(1100, 720)
         self.surface = QVideoWidget()
         self.surface.setMinimumSize(320, 180)
@@ -109,7 +109,7 @@ class PlayerWindow(QMainWindow):
 
     def retranslate(self):
         label = self.bridge.ui_text
-        self.setWindowTitle(label('视频播放 · 视频记忆助手'))
+        self.setWindowTitle(label('视频播放 · Vidence'))
         self.play.setText(label('暂停' if self.bridge.player.isPlaying() else '播放'))
         self.play.setAccessibleName(label('播放或暂停')); self.seek.setAccessibleName(label('视频进度')); self.volume.setAccessibleName(label('音量'))
         self.mute.setText(label('取消静音' if self.bridge.audio.isMuted() else '静音'))

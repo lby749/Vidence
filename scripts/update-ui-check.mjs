@@ -11,11 +11,11 @@ const context = await chromium.launchPersistentContext(fs.mkdtempSync(path.join(
   channel: process.env.E2E_BROWSER ?? 'msedge', headless: true, locale: 'zh-CN', viewport: { width: 1100, height: 950 },
   args: [`--load-extension=${extension}`, `--disable-extensions-except=${extension}`, '--disable-gpu', '--no-first-run'],
 });
-let calls = 0, version = '0.1.0-beta.3', status = 200;
+let calls = 0, version = '0.1.0-beta.4', status = 200;
 const report = { scope: 'isolated-browser-release-feed-fixture', liveReleaseClaim: false };
 try {
-  await context.route('https://api.github.com/repos/lby749/lby/releases?*', route => {
-    calls++; return route.fulfill({ status, contentType: 'application/json', body: JSON.stringify(status === 200 ? [{ tag_name: `v${version}`, html_url: `https://github.com/lby749/lby/releases/tag/v${version}`, published_at: '2026-11-11T00:00:00Z', prerelease: true, draft: false, body: '修复持续运动的画面记录。<img src=x onerror=alert(1)>' }] : {}) });
+  await context.route('https://api.github.com/repos/lby749/Vidence/releases?*', route => {
+    calls++; return route.fulfill({ status, contentType: 'application/json', body: JSON.stringify(status === 200 ? [{ tag_name: `v${version}`, html_url: `https://github.com/lby749/Vidence/releases/tag/v${version}`, published_at: '2026-11-11T00:00:00Z', prerelease: true, draft: false, body: '修复持续运动的画面记录。<img src=x onerror=alert(1)>' }] : {}) });
   });
   let [worker] = context.serviceWorkers(); worker ??= await context.waitForEvent('serviceworker');
   const page = await context.newPage(), url = `chrome-extension://${new URL(worker.url()).host}/library.html`;
@@ -36,9 +36,9 @@ try {
   assert.equal(await card.locator('img').count(), 0, '版本说明作为文本呈现');
   await page.evaluate(() => { window.openedUpdate = []; window.open = (...args) => { window.openedUpdate.push(args); return null; }; });
   await card.getByRole('button', { name: '查看更新', exact: true }).click();
-  assert.deepEqual(await page.evaluate(() => window.openedUpdate[0]), [`https://github.com/lby749/lby/releases/tag/v${version}`, '_blank', 'noopener,noreferrer']);
+  assert.deepEqual(await page.evaluate(() => window.openedUpdate[0]), [`https://github.com/lby749/Vidence/releases/tag/v${version}`, '_blank', 'noopener,noreferrer']);
   await card.getByRole('button', { name: '反馈问题或建议 ↗', exact: true }).click();
-  assert.deepEqual(await page.evaluate(() => window.openedUpdate[1]), ['https://github.com/lby749/lby/issues/new/choose', '_blank', 'noopener,noreferrer']);
+  assert.deepEqual(await page.evaluate(() => window.openedUpdate[1]), ['https://github.com/lby749/Vidence/issues/new/choose', '_blank', 'noopener,noreferrer']);
   await card.getByRole('checkbox', { name: '自动提醒新版本', exact: true }).uncheck();
   await page.evaluate(() => { const state = JSON.parse(localStorage.getItem('vma-app-updates')); state.checkedAt = 0; localStorage.setItem('vma-app-updates', JSON.stringify(state)); });
   await page.reload(); await page.getByRole('button', { name: '设置', exact: true }).click();

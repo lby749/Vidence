@@ -1,4 +1,4 @@
-export const APP_NAME = '视频记忆助手';
+export const APP_NAME = 'Vidence';
 export const DB_NAME = 'video-memory-assistant';
 export const DB_VERSION = 2;
 

@@ -10,12 +10,12 @@ import tempfile
 import zipfile
 
 root = Path(__file__).resolve().parents[1]
-package = (root / sys.argv[1]).resolve() if len(sys.argv) > 1 else root / 'dist/desktop-player/视频记忆助手'
+package = (root / sys.argv[1]).resolve() if len(sys.argv) > 1 else root / 'dist/desktop-player/Vidence'
 assert root in package.parents
-assert all((package / name).is_file() for name in ('一键启动.exe', '一键安装到浏览器.cmd', '视频记忆助手.exe'))
+assert all((package / name).is_file() for name in ('一键启动.exe', '一键安装到浏览器.cmd', 'Vidence.exe'))
 files = [file for file in package.rglob('*') if file.is_file()]
 assert not any(file.suffix.lower() in ('.onnx', '.gguf', '.safetensors', '.tar', '.db', '.sqlite') or file.name == 'token' for file in files)
-archive = root / 'dist/视频记忆助手-Windows-x64.zip'
+archive = root / 'dist/Vidence-Windows-x64.zip'
 temporary_archive = archive.with_suffix('.zip.part')
 with zipfile.ZipFile(temporary_archive, 'w', zipfile.ZIP_DEFLATED, compresslevel=1) as bundle:
     for file in files: bundle.write(file, Path(package.name) / file.relative_to(package))

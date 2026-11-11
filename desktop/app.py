@@ -224,9 +224,9 @@ class NativeBridge(QObject):
     def setUiLanguage(self, language):
         if language not in ('zh-CN', 'zh-TW', 'en'): return result(error='Unsupported interface language')
         self.ui_language = language
-        self.window.setWindowTitle(self.ui_text('视频记忆助手 · 学习空间'))
+        self.window.setWindowTitle(self.ui_text('Vidence · 学习空间'))
         if self.presentation.player: self.presentation.player.retranslate()
-        if self.web_window: self.web_window.setWindowTitle(self.ui_text('课程播放 · 视频记忆助手'))
+        if self.web_window: self.web_window.setWindowTitle(self.ui_text('课程播放 · Vidence'))
         return result(ok=True)
 
     def accept_frame(self, frame):
@@ -606,7 +606,7 @@ def main():
     QtWebView.initialize()
     app = QApplication(sys.argv)
     app.setQuitOnLastWindowClosed(False)
-    app.setApplicationName('视频记忆助手')
+    app.setApplicationName('Vidence')
     app.setWindowIcon(QIcon(str(ROOT / '.output/chrome-mv3/brand/app.ico')))
     if not (ROOT / '.output/chrome-mv3/desktop.html').is_file():
         QMessageBox.critical(None, '还没有构建应用', '请先在项目目录运行 npm run build。')
@@ -619,7 +619,7 @@ def main():
     threading.Thread(target=server.serve_forever, daemon=True).start()
     server.daemon_threads = True
     window = LearningWindow()
-    window.setWindowTitle('视频记忆助手 · 学习空间')
+    window.setWindowTitle('Vidence · 学习空间')
     window.resize(1440, 1000)
     browser = QWebEngineView(window)
     profile = QWebEngineProfile('video-memory-desktop', window)

@@ -24,4 +24,4 @@
 
 实现依据：[Qt QVideoWidget](https://doc.qt.io/qtforpython-6/PySide6/QtMultimediaWidgets/QVideoWidget.html)、[Qt QVideoFrame](https://doc.qt.io/qtforpython-6/PySide6/QtMultimedia/QVideoFrame.html)。
 
-感谢您的支持，如果有帮助的话，请点一个 [STAR](https://github.com/lby749/lby)，谢谢！
+感谢您的支持，如果有帮助的话，请点一个 [STAR](https://github.com/lby749/Vidence)，谢谢！

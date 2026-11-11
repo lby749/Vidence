@@ -21,7 +21,7 @@
 
 应用目录约 791 MB（十进制），包括 Qt、Node 和推理运行时；发布包内模型权重为 0。用户下载的离线功能另占模型缓存空间。
 
-当前新成品位于 dist/desktop-preferences/视频记忆助手。旧 dist/desktop、dist/desktop-update 包仍保留在开发目录；它们不是普通用户安装时需要的额外程序。源码测试状态 .desktop-state 约 734 MB，保留的测试模型约 342 MB，均为开发测试数据，不随发布。替换旧包的删除命令曾被自动审批拒绝，因此改在新目录构建，没有删除旧数据。
+当前新成品位于 dist/desktop-preferences/Vidence。旧 dist/desktop、dist/desktop-update 包仍保留在开发目录；它们不是普通用户安装时需要的额外程序。源码测试状态 .desktop-state 约 734 MB，保留的测试模型约 342 MB，均为开发测试数据，不随发布。替换旧包的删除命令曾被自动审批拒绝，因此改在新目录构建，没有删除旧数据。
 
 ### AI 调用
 
@@ -81,4 +81,4 @@ DSH 的 [官方命令行协议](https://github.com/deepseek-ai/deepseek-harness/
 
 界面翻译使用本地字典，不调用模型。窗口跟随仅在几何/可见性变化时更新；相同网页窗口已经采集时不重复stop/start，避免无效刷新。自动验收已改为无账号headless浏览器和Qt offscreen，避免在用户当前窗口反复切换全屏。新的隔离桌面验收启动命令曾被自动审批以blocked by policy拒绝，未换方式重试该动作。
 
-感谢您的支持，如果有帮助的话，请点一个 [STAR](https://github.com/lby749/lby)，谢谢！
+感谢您的支持，如果有帮助的话，请点一个 [STAR](https://github.com/lby749/Vidence)，谢谢！

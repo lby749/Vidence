@@ -8,7 +8,7 @@ import urllib.request
 
 root = Path(__file__).resolve().parents[1]
 output = Path(sys.argv[1]).resolve()
-assert root in output.parents and (output / '视频记忆助手.exe').is_file()
+assert root in output.parents and (output / 'Vidence.exe').is_file()
 notices = output / '_internal/notices'
 cache = root / 'artifacts/license-cache'
 cache.mkdir(parents=True, exist_ok=True)

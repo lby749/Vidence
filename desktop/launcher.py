@@ -16,13 +16,13 @@ if '--self-check' in sys.argv:
 
 FROZEN = getattr(sys, 'frozen', False)
 ROOT = Path(sys._MEIPASS) if FROZEN else Path(__file__).resolve().parents[1]
-APP_DIR = Path(sys.executable).parent if FROZEN else ROOT / 'dist/desktop-player/视频记忆助手'
+APP_DIR = Path(sys.executable).parent if FROZEN else ROOT / 'dist/desktop-player/Vidence'
 BOOTSTRAP_SHA256 = 'cf2f2445fef0c5c14e372045f84998771eeb8bb01d59be4afd00692fa160082e'
 WEBVIEW_KEY = r'Software\Microsoft\EdgeUpdate\Clients\{F3017226-FE2A-4295-8BDF-00C3A9A7E4C5}'
 
 TEXT = {
     'zh-CN': [
-        '视频记忆助手', '准备好，开始学习。', '打开视频，在右侧留下理解、问题与记忆。',
+        'Vidence', '准备好，开始学习。', '打开视频，在右侧留下理解、问题与记忆。',
         '无需配置环境。所需程序随包提供，模型按你的选择下载。', '打开学习空间', '安装浏览器插件',
         '在浏览器里，也能随看随记。', '选择你平时使用的浏览器', '准备插件并打开安装页',
         '1  打开「开发人员模式」\n2  点「加载解压缩的扩展」，粘贴下方路径\n3  确认后，刷新视频页面即可使用',
@@ -34,7 +34,7 @@ TEXT = {
         '首次缺少网页播放组件时自动准备，不需要你另找安装包。', '该浏览器未能打开，请重试。',
     ],
     'zh-TW': [
-        '影片記憶助手', '準備好，開始學習。', '開啟影片，在右側留下理解、問題與記憶。',
+        'Vidence', '準備好，開始學習。', '開啟影片，在右側留下理解、問題與記憶。',
         '無需設定環境。所需程式隨包提供，模型依你的選擇下載。', '開啟學習空間', '安裝瀏覽器擴充功能',
         '在瀏覽器裡，也能隨看隨記。', '選擇你平時使用的瀏覽器', '準備檔案並開啟安裝頁',
         '1  開啟「開發人員模式」\n2  點「載入未封裝項目」，貼上下方路徑\n3  確認後，重新整理影片頁面即可使用',
@@ -46,7 +46,7 @@ TEXT = {
         '首次缺少網頁播放元件時自動準備，無需另外尋找安裝程式。', '無法開啟這個瀏覽器，請重試。',
     ],
     'en': [
-        'Video Memory', 'Ready when you are.', 'Keep your understanding, questions and memories beside the video.',
+        'Vidence', 'Ready when you are.', 'Keep your understanding, questions and memories beside the video.',
         'No environment setup. Everything needed is included; download models when you choose.', 'Open learning space', 'Add to your browser',
         'Watch and remember, in your browser.', 'Choose your everyday browser', 'Prepare files and open installation',
         '1  Turn on “Developer mode”\n2  Choose “Load unpacked” and paste the path below\n3  Confirm, then refresh your video page',
@@ -140,7 +140,7 @@ def focus_app():
     api.ShowWindow.argtypes = [wintypes.HWND, ctypes.c_int]
     api.SetForegroundWindow.argtypes = [wintypes.HWND]
     api.IsIconic.argtypes = [wintypes.HWND]
-    for title in ('视频记忆助手 · 学习空间', '影片記憶助手 · 學習空間', 'Video Memory · Learning space'):
+    for title in ('Vidence · 学习空间', 'Vidence · 學習空間', 'Vidence · Learning space'):
         window = api.FindWindowW(None, title)
         if window:
             if api.IsIconic(window): api.ShowWindow(window, 9)
@@ -160,7 +160,7 @@ class Launcher(QWidget):
         self.language.setCurrentIndex(1 if system in ('zh_TW', 'zh_HK', 'zh_MO') else 0 if system.startswith('zh') else 2)
         self.language.currentIndexChanged.connect(self.retranslate)
         layout = QVBoxLayout(self); layout.setContentsMargins(36, 26, 36, 30); layout.setSpacing(17)
-        header = QHBoxLayout(); logo = QLabel(); logo.setPixmap(QPixmap(str(ROOT / '.output/chrome-mv3/brand/icon-128.png')).scaled(32, 32, Qt.AspectRatioMode.KeepAspectRatio, Qt.TransformationMode.SmoothTransformation)); header.addWidget(logo); brand = QLabel('VIDEO MEMORY · BETA'); brand.setObjectName('brand'); header.addWidget(brand); header.addStretch(); header.addWidget(self.language); layout.addLayout(header)
+        header = QHBoxLayout(); logo = QLabel(); logo.setPixmap(QPixmap(str(ROOT / '.output/chrome-mv3/brand/icon-128.png')).scaled(32, 32, Qt.AspectRatioMode.KeepAspectRatio, Qt.TransformationMode.SmoothTransformation)); header.addWidget(logo); brand = QLabel('Vidence · BETA'); brand.setObjectName('brand'); header.addWidget(brand); header.addStretch(); header.addWidget(self.language); layout.addLayout(header)
         self.title = QLabel(); self.title.setObjectName('title'); layout.addWidget(self.title)
         self.intro = QLabel(); self.intro.setWordWrap(True); layout.addWidget(self.intro)
         self.environment = QLabel(); self.environment.setWordWrap(True); self.environment.setObjectName('muted'); layout.addWidget(self.environment)
@@ -242,7 +242,7 @@ class Launcher(QWidget):
         else: self.status.setText(self.text(17)); self.local_button.show()
 
     def launch_app(self):
-        executable = APP_DIR / '视频记忆助手.exe'
+        executable = APP_DIR / 'Vidence.exe'
         if not executable.is_file(): self.status.setText(self.text(19)); return
         started, _pid = QProcess.startDetached(str(executable), [], str(APP_DIR))
         if started: self.close()
@@ -273,7 +273,7 @@ def main():
             copied_files = sum(file.is_file() for file in copied.rglob('*'))
         runtime = ROOT / 'runtime/node.exe'
         node = subprocess.run([str(runtime), '--version'], capture_output=True, text=True, check=True)
-        assert (APP_DIR / '视频记忆助手.exe').is_file()
+        assert (APP_DIR / 'Vidence.exe').is_file()
         assert hashlib.sha256((ROOT / 'desktop/runtime/webview2/MicrosoftEdgeWebview2Setup.exe').read_bytes()).hexdigest() == BOOTSTRAP_SHA256
         window.install_panel.show(); window.show(); app.processEvents()
         window.grab().save(str(report_path.with_suffix('.png')))

@@ -57,10 +57,10 @@ export function openDock(tabId: number, mode: 'nodes' | 'ask' = 'nodes', onClose
   const url = `${chrome.runtime.getURL('sidepanel.html')}?embedded=1&tabId=${tabId}&tab=${mode}`;
   shadow.innerHTML = `
     <style>${STYLE}</style>
-    <div class="dock" role="complementary" aria-label="视频记忆助手侧边面板">
+    <div class="dock" role="complementary" aria-label="Vidence侧边面板">
       <div class="bar">
         <span class="mark">记</span>
-        <span class="title">视频记忆助手</span>
+        <span class="title">Vidence</span>
         <span class="spacer"></span>
         <button id="popout" title="在新标签页打开完整面板">独立页</button>
         <button id="close" class="close" title="关闭">×</button>

@@ -409,7 +409,7 @@ export async function buildHandoffText(params: {
   };
   const summary = await questionSummary(ctx, params.video.title, params.nodes, params.evidence, settings);
   const lines = [
-    '我在观看视频时希望借助本机“视频记忆助手”记忆库理解一个片段。',
+    '我在观看视频时希望借助本机“Vidence”记忆库理解一个片段。',
     '',
     `视频：${params.video.title}`,
     `提问位置：${formatClock(params.frozenTime)}`,

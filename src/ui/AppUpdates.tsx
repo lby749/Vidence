@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react';
 import { APP_VERSION, checkAppUpdate, deferAppUpdate, readUpdateState, setAutomaticUpdates } from '@/shared/app-updates';
 import { Localized } from './i18n';
-const FEEDBACK_URL = 'https://github.com/lby749/lby/issues/new/choose';
+const FEEDBACK_URL = 'https://github.com/lby749/Vidence/issues/new/choose';
 
 export default function AppUpdates({ compact = false }: { compact?: boolean }) {
   const [state, setState] = useState(readUpdateState), [checking, setChecking] = useState(false);

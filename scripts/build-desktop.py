@@ -12,7 +12,7 @@ root = Path(__file__).resolve().parents[1]
 destination = root / sys.argv[1] if len(sys.argv) > 1 else root / 'dist/desktop-player'
 assert root in destination.resolve().parents
 assert not destination.exists(), '输出目录已存在；请指定一个新的 dist 子目录，避免覆盖运行中的版本'
-output = destination / '视频记忆助手'
+output = destination / 'Vidence'
 assert root in output.resolve().parents
 assets = root / '.output/chrome-mv3'
 assert (assets / 'desktop.html').exists(), '请先运行 npm run build'
@@ -20,7 +20,7 @@ assert not any(file.suffix.lower() in ('.onnx', '.tar', '.gguf', '.safetensors')
 node = Path(shutil.which('node') or '')
 assert node.is_file(), '没有找到 Node 运行时'
 assert (root / 'desktop/runtime/llama/cpu').is_dir(), '请先运行 python scripts/prepare-native-runtime.py'
-command = [sys.executable, '-m', 'PyInstaller', '--noconfirm', '--onedir', '--windowed', '--name', '视频记忆助手', '--icon', str(root / 'public/brand/app.ico'), '--distpath', str(destination), '--workpath', str(root / '.desktop-build/pyinstaller'), '--specpath', str(root / 'desktop'), '--add-data', f'{assets}{os.pathsep}.output/chrome-mv3', '--add-binary', f'{node}{os.pathsep}runtime', '--add-data', f'{root / "desktop/runtime/llama"}{os.pathsep}desktop/runtime/llama', '--add-data', f'{root / "src/models/desktop-embedding.json"}{os.pathsep}src/models']
+command = [sys.executable, '-m', 'PyInstaller', '--noconfirm', '--onedir', '--windowed', '--name', 'Vidence', '--icon', str(root / 'public/brand/app.ico'), '--distpath', str(destination), '--workpath', str(root / '.desktop-build/pyinstaller'), '--specpath', str(root / 'desktop'), '--add-data', f'{assets}{os.pathsep}.output/chrome-mv3', '--add-binary', f'{node}{os.pathsep}runtime', '--add-data', f'{root / "desktop/runtime/llama"}{os.pathsep}desktop/runtime/llama', '--add-data', f'{root / "src/models/desktop-embedding.json"}{os.pathsep}src/models']
 # QWebView 是 Qt 6.11 新增 Python 绑定，旧 PyInstaller 没有专用 hook。
 plugin = Path(QLibraryInfo.path(QLibraryInfo.LibraryPath.PluginsPath)) / 'webview'
 for file in plugin.glob('*webview2*' if os.name == 'nt' else '*darwin*'):

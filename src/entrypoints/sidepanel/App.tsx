@@ -261,7 +261,7 @@ export default function App() {
       <div className="topbar">
         <div className="brand">
           <img className="brand-mark" src="/brand/icon-128.png" alt="" aria-hidden="true"/>
-          视频记忆 <span className="beta-badge">BETA</span>
+          Vidence <span className="beta-badge">BETA</span>
         </div>
         <span className={`pill ${state.recording ? 'ok' : ''}`}>{statusPill}</span>
         <div className="spacer" />

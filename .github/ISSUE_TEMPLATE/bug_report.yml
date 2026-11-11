@@ -12,7 +12,7 @@ body:
     attributes:
       label: 应用版本
       description: 可在“设置 → 应用更新”中查看。
-      placeholder: 例如 0.1.0-beta.2
+      placeholder: 例如 0.1.0-beta.3
     validations:
       required: true
   - type: input

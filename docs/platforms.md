@@ -26,4 +26,4 @@
 
 AI 应用网页连接器、API 服务及 Notion 的接入说明见 connectors.md；这些与视频网站采集支持属于不同能力，不能互相替代验收。
 
-感谢您的支持，如果有帮助的话，请点一个 [STAR](https://github.com/lby749/lby)，谢谢！
+感谢您的支持，如果有帮助的话，请点一个 [STAR](https://github.com/lby749/Vidence)，谢谢！

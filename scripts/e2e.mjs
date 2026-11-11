@@ -304,7 +304,7 @@ async function main() {
     fs.writeFileSync(path.join(ARTIFACTS, 'export-sample.json'), exported.slice(0, 200000));
 
     await worker.evaluate(() => chrome.storage.local.set({ vmaUiLanguage: 'en' }));
-    await page.locator('#vma-launcher-host .label').filter({ hasText: 'Video Memory' }).waitFor();
+    await page.locator('#vma-launcher-host .label').filter({ hasText: 'Vidence' }).waitFor();
     assert(true, '页面启动器跟随界面语言，不翻译视频内容');
     await worker.evaluate(() => chrome.storage.local.set({ vmaUiLanguage: 'zh-CN' }));
     log('控制台错误', consoleErrors.slice(0, 20));

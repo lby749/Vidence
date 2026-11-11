@@ -99,7 +99,7 @@ jobs:
         with:
           name: windows-smoke-media
           path: smoke-media
-      - run: ./scripts/windows-runtime-check.ps1 -Package "portable/视频记忆助手" -Media "smoke-media/720p-60.mp4"
+      - run: ./scripts/windows-runtime-check.ps1 -Package "portable/Vidence" -Media "smoke-media/720p-60.mp4"
       - uses: actions/upload-artifact@v7
         if: always()
         with:
@@ -123,7 +123,7 @@ jobs:
           python - <<'PY'
           from pathlib import Path
           import hashlib, zipfile
-          root = Path('portable'); output = Path('release/VideoMemory-Windows-x64.zip')
+          root = Path('portable'); output = Path('release/Vidence-Windows-x64.zip')
           output.parent.mkdir()
           with zipfile.ZipFile(output, 'w', zipfile.ZIP_DEFLATED, compresslevel=6) as bundle:
               for file in root.rglob('*'):
@@ -140,4 +140,4 @@ jobs:
             echo 'This version already exists; its release and assets stay unchanged.'
             exit 0
           fi
-          gh release create "$tag" release/VideoMemory-Windows-x64.zip release/VideoMemory-Windows-x64.zip.sha256 --target "$GITHUB_SHA" --prerelease --title "视频记忆助手 $tag · BETA" --notes-file docs/release-notes.md
+          gh release create "$tag" release/Vidence-Windows-x64.zip release/Vidence-Windows-x64.zip.sha256 --target "$GITHUB_SHA" --prerelease --title "Vidence $tag · BETA" --notes-file docs/release-notes.md

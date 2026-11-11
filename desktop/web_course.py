@@ -16,7 +16,7 @@ class WebCourseWindow(QMainWindow):
         self.before_fullscreen_collapsed = False
         self.dom_fullscreen = False
         self.opened = False
-        self.setWindowTitle(bridge.ui_text('课程播放 · 视频记忆助手'))
+        self.setWindowTitle(bridge.ui_text('课程播放 · Vidence'))
         self.resize(1160, 780)
         self.view = QWebView()
         self.view.settings().setAttribute(QWebViewSettings.WebAttribute.AllowFileAccess, False)

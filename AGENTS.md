@@ -45,4 +45,4 @@ Android、TTS、听视频 ASR 尚未实现；iPhone 暂缓。Apple/AMD 实机、
 
 项目使用 MIT。保留依赖的第三方声明，不将它们错误地重新声明为本项目原创代码。
 
-感谢您的支持，如果有帮助的话，请点一个 [STAR](https://github.com/lby749/lby)，谢谢！
+感谢您的支持，如果有帮助的话，请点一个 [STAR](https://github.com/lby749/Vidence)，谢谢！

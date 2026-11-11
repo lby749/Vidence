@@ -147,7 +147,7 @@ export default function App({ onNewSource }: { onNewSource?: () => void } = {}) 
       const url = URL.createObjectURL(blob);
       const anchor = document.createElement('a');
       anchor.href = url;
-      anchor.download = `视频记忆导出-${new Date().toISOString().slice(0, 10)}.json`;
+      anchor.download = `Vidence-export-${new Date().toISOString().slice(0, 10)}.json`;
       anchor.click();
       URL.revokeObjectURL(url);
       setToast('已导出（不包含任何 API Key 或 Notion 令牌）');
@@ -204,7 +204,7 @@ export default function App({ onNewSource }: { onNewSource?: () => void } = {}) 
     <div className="page">
       <div className="page-header">
         <img className="brand-mark" src="/brand/icon-128.png" alt="" aria-hidden="true"/>
-        <h1 className="page-title">视频记忆助手</h1><span className="beta-badge">BETA · 测试版</span>
+        <h1 className="page-title">Vidence</h1><span className="beta-badge">BETA · 测试版</span>
         <span className="header-caption">个人学习空间</span>
         <div className="spacer" />
         {onNewSource && <button className="btn" onClick={onNewSource}>添加视频</button>}

@@ -1,7 +1,7 @@
 import packageInfo from '../../package.json';
 
 export const APP_VERSION = packageInfo.version;
-export const UPDATE_REPOSITORY = 'lby749/lby';
+export const UPDATE_REPOSITORY = 'lby749/Vidence';
 export const UPDATE_API = `https://api.github.com/repos/${UPDATE_REPOSITORY}/releases?per_page=20`;
 const KEY = 'vma-app-updates', DAY = 86400000;
 export interface AppUpdate { version: string; url: string; notes: string }
@@ -47,11 +47,12 @@ export function newestRelease(releases: unknown, current = APP_VERSION): AppUpda
 export function readUpdateState(): UpdateState {
   try {
     const saved = JSON.parse(localStorage.getItem(KEY) ?? '{}');
+    if (saved.repository !== UPDATE_REPOSITORY) return { auto: saved.auto !== false, checkedAt: 0 };
     return { ...saved, auto: saved.auto !== false, checkedAt: Number.isFinite(saved.checkedAt) && saved.checkedAt <= Date.now() ? saved.checkedAt : 0, update: saved.update && (compareVersions(saved.update.version ?? '', APP_VERSION) ?? -1) > 0 && officialUrl(saved.update.url) ? { version: saved.update.version, url: saved.update.url, notes: typeof saved.update.notes === 'string' ? saved.update.notes.slice(0, 1600) : '' } : undefined };
   } catch { return { auto: true, checkedAt: 0 }; }
 }
 function writeState(state: UpdateState) {
-  try { localStorage.setItem(KEY, JSON.stringify(state)); } catch { /* 隐私模式下仍可手动检查。 */ }
+  try { localStorage.setItem(KEY, JSON.stringify({ ...state, repository: UPDATE_REPOSITORY })); } catch { /* 隐私模式下仍可手动检查。 */ }
   if (typeof window !== 'undefined') window.dispatchEvent(new Event('vma:app-updates'));
   return state;
 }

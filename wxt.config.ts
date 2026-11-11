@@ -15,12 +15,12 @@ export default defineConfig({
     },
   },
   manifest: {
-    name: '视频记忆助手 BETA',
-    short_name: '视频记忆',
+    name: 'Vidence BETA',
+    short_name: 'Vidence',
     description:
       '边看视频边建立本地记忆库：记录字幕与关键画面，可检索、可选中节点向 AI 提问。',
-    version: '0.1.0.2',
-    version_name: '0.1.0 BETA.2',
+    version: '0.1.0.3',
+    version_name: '0.1.0 BETA.3',
     icons: { 16: 'brand/icon-16.png', 32: 'brand/icon-32.png', 48: 'brand/icon-48.png', 128: 'brand/icon-128.png' },
     minimum_chrome_version: '116',
     sandbox: { pages: ['sandbox.html'] },
@@ -43,7 +43,7 @@ export default defineConfig({
       default_path: 'sidepanel.html',
     },
     action: {
-      default_title: '视频记忆助手',
+      default_title: 'Vidence',
       default_icon: { 16: 'brand/icon-16.png', 32: 'brand/icon-32.png', 48: 'brand/icon-48.png', 128: 'brand/icon-128.png' },
     },
     options_ui: {

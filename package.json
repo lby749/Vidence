@@ -1,9 +1,9 @@
 {
-  "name": "video-memory-assistant",
+  "name": "vidence",
   "private": true,
-  "version": "0.1.0-beta.2",
+  "version": "0.1.0-beta.3",
   "type": "module",
-  "description": "开源浏览器视频记忆助手：边看边记录、可检索、可向 AI 应用提问的个人视频记忆库",
+  "description": "Vidence：边看视频边建立可检索、可提问的学习记忆。",
   "license": "MIT",
   "scripts": {
     "dev": "wxt",
