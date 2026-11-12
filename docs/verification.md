@@ -76,3 +76,6 @@
 新增命令：`python scripts/build-extension-installer.py dist/Vidence-Browser-Extension.zip dist/Vidence-Extension-Setup-Windows.exe`、`python scripts/extension-exe-check.py dist/Vidence-Extension-Setup-Windows.exe`。纯ZIP根目录为manifest.json，拒绝EXE/CMD/PS1/BAT及模型文件。
 
 EXE在新Windows runner构建，输入是Linux已验收的同一个ZIP；搬到带空格的临时目录，将PATH设为System32后运行成品自检。自检使用临时AppData检查首次安装、重复安装、相邻学习数据标记保留、过期JS删除、路径穿越拒绝及内嵌SHA；不访问用户配置，也不打开浏览器。界面截图为离屏窗口渲染，不能当成真实账号安装或物理空白Windows验收。Windows系统自带.NET Framework仍是依赖，不随包分发。
+
+
+0.4.1首轮云端43168897895在Windows Edge发现内层关闭按钮消息被丢弃，发布已自动跳过；Linux通过。原guard只接受event.source===frame.contentWindow。扩展特权消息可以source=null（MDN postMessage扩展说明），改为可信事件+严格本扩展origin+匹配窗口或特权null来源。新增8项身份/来源/伪造/无侧栏回归，旧实现3项失败，修复后总计153项通过；真实Edge仍须新云端再次验收，不能仅以本机和单元测试替代。

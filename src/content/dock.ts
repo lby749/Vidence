@@ -81,8 +81,13 @@ export function openDock(tabId: number, mode: 'nodes' | 'ask' = 'nodes', onClose
   document.addEventListener('keydown', onKeyDown);
 }
 
+export function isDockMessage(event: Pick<MessageEvent, 'source' | 'origin' | 'isTrusted'>, expected: Window | null, origin: string): boolean {
+  // Privileged extension messages can have source=null; authenticate origin as well.
+  return Boolean(expected) && event.isTrusted && event.origin === origin && (event.source === expected || event.source === null);
+}
+
 function onWindowMessage(event: MessageEvent): void {
-  if (event.source !== frame?.contentWindow) return;
+  if (!isDockMessage(event, frame?.contentWindow ?? null, chrome.runtime.getURL('').replace(/\/$/, ''))) return;
   if (event.data?.type === 'vma:close-dock') closeDock();
   if (event.data?.type === 'vma:popout-dock') {
     const tabId = Number(event.data.tabId) || 0;

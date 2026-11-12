@@ -196,6 +196,12 @@ async function main() {
     await page.screenshot({ path: path.join(ARTIFACTS, 'page-launcher.png'), fullPage: false });
 
     // 验证页面内真实侧栏，而非只在单独标签页渲染。
+    await page.evaluate(() => {
+      window.__dockMessageTrace = [];
+      window.addEventListener('message', event => {
+        if (event.data?.type === 'vma:close-dock') window.__dockMessageTrace.push({ origin: event.origin, nullSource: event.source === null, trusted: event.isTrusted });
+      });
+    });
     const openDock = async () => {
       if (!await page.locator('#vma-launcher-host #panel').count()) await page.locator('#vma-launcher-host .pill').click();
       await page.locator('#vma-launcher-host #panel').click();
@@ -208,7 +214,9 @@ async function main() {
     await openDock();
     const dockFrame = page.frameLocator('#vma-dock-host iframe');
     await dockFrame.getByRole('button', { name: '关闭面板', exact: true }).click();
-    await page.locator('#vma-dock-host').waitFor({ state: 'detached' });
+    try { await page.locator('#vma-dock-host').waitFor({ state: 'detached' }); }
+    catch (error) { log('侧栏关闭消息诊断', await page.evaluate(() => window.__dockMessageTrace)); throw error; }
+    log('侧栏关闭消息已处理', await page.evaluate(() => window.__dockMessageTrace));
     await page.waitForTimeout(1400);
     assert(await page.locator('#vma-dock-host').count() === 0, '关闭后状态刷新不会重新弹出侧栏');
     await openDock();
