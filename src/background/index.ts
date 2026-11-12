@@ -333,6 +333,11 @@ async function handleUi(message: UiRequest, sendResponse: (response: Result<unkn
 
 async function routeUi(message: UiRequest): Promise<unknown> {
   switch (message.type) {
+    case 'ui:close-panel': {
+      if (!Number.isSafeInteger(message.payload.tabId) || message.payload.tabId < 0) throw new Error('没有可关闭的标签页');
+      await chrome.tabs.sendMessage(message.payload.tabId, { type: 'capture:close-panel', payload: {} });
+      return null;
+    }
     case 'ui:get-state': {
       const tabId = message.payload?.tabId ?? (await activeTabId());
       return buildStateDynamic(tabId);

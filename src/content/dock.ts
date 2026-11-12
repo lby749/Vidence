@@ -77,22 +77,7 @@ export function openDock(tabId: number, mode: 'nodes' | 'ask' = 'nodes', onClose
   });
 
   document.addEventListener('fullscreenchange', onFullscreenChange, true);
-  window.addEventListener('message', onWindowMessage);
   document.addEventListener('keydown', onKeyDown);
-}
-
-export function isDockMessage(event: Pick<MessageEvent, 'source' | 'origin' | 'isTrusted'>, expected: Window | null, origin: string): boolean {
-  // Privileged extension messages can have source=null; authenticate origin as well.
-  return Boolean(expected) && event.isTrusted && event.origin === origin && (event.source === expected || event.source === null);
-}
-
-function onWindowMessage(event: MessageEvent): void {
-  if (!isDockMessage(event, frame?.contentWindow ?? null, chrome.runtime.getURL('').replace(/\/$/, ''))) return;
-  if (event.data?.type === 'vma:close-dock') closeDock();
-  if (event.data?.type === 'vma:popout-dock') {
-    const tabId = Number(event.data.tabId) || 0;
-    if (tabId) window.open(chrome.runtime.getURL(`sidepanel.html?tabId=${tabId}`), '_blank');
-  }
 }
 
 function onKeyDown(event: KeyboardEvent): void {
@@ -107,7 +92,6 @@ function onFullscreenChange(): void {
 
 export function closeDock(): void {
   setLauncherHidden(false);
-  window.removeEventListener('message', onWindowMessage);
   document.removeEventListener('keydown', onKeyDown);
   document.removeEventListener('fullscreenchange', onFullscreenChange, true);
   host?.remove();

@@ -78,4 +78,6 @@
 EXE在新Windows runner构建，输入是Linux已验收的同一个ZIP；搬到带空格的临时目录，将PATH设为System32后运行成品自检。自检使用临时AppData检查首次安装、重复安装、相邻学习数据标记保留、过期JS删除、路径穿越拒绝及内嵌SHA；不访问用户配置，也不打开浏览器。界面截图为离屏窗口渲染，不能当成真实账号安装或物理空白Windows验收。Windows系统自带.NET Framework仍是依赖，不随包分发。
 
 
-0.4.1首轮云端43168897895在Windows Edge发现内层关闭按钮消息被丢弃，发布已自动跳过；Linux通过。原guard只接受event.source===frame.contentWindow。扩展特权消息可以source=null（MDN postMessage扩展说明），改为可信事件+严格本扩展origin+匹配窗口或特权null来源。新增8项身份/来源/伪造/无侧栏回归，旧实现3项失败，修复后总计153项通过；真实Edge仍须新云端再次验收，不能仅以本机和单元测试替代。
+0.4.1两次云端43168897895、43169542831在Windows Edge发现内层关闭操作未完成，发布均自动跳过；Linux通过。第二轮诊断显示父页面未收到任何关闭事件（trace为空），接收端兼容null source的修补未解决，已删除该过渡guard及对应8项测试。最终改为UI runtime.sendMessage → 后台验证tabId → tabs.sendMessage → 内容脚本closeDock，删除原postMessage关闭/弹出接收器，用户页面不能通过该旧通道控制关闭。
+
+原145项单元检查保持通过；真实浏览器E2E继续点击内层×，额外核对后台收到目标视频tabId、拒绝无效目标、关闭不停止记录、不随刷新自动弹回。iframe URL中的tabId用于首屏状态尚未加载时的关闭请求；没有退回其他活动标签页。真实Edge仍须新云端再次验收，不能仅以本机和单元测试替代。

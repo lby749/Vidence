@@ -196,10 +196,10 @@ async function main() {
     await page.screenshot({ path: path.join(ARTIFACTS, 'page-launcher.png'), fullPage: false });
 
     // 验证页面内真实侧栏，而非只在单独标签页渲染。
-    await page.evaluate(() => {
-      window.__dockMessageTrace = [];
-      window.addEventListener('message', event => {
-        if (event.data?.type === 'vma:close-dock') window.__dockMessageTrace.push({ origin: event.origin, nullSource: event.source === null, trusted: event.isTrusted });
+    await worker.evaluate(() => {
+      self.__dockCloseTargets = [];
+      chrome.runtime.onMessage.addListener(message => {
+        if (message.type === 'ui:close-panel') self.__dockCloseTargets.push(message.payload.tabId);
       });
     });
     const openDock = async () => {
@@ -211,12 +211,22 @@ async function main() {
     await page.getByRole('button', { name: '关闭学习栏', exact: true }).click();
     await page.locator('#vma-dock-host').waitFor({ state: 'detached' });
     await page.locator('#vma-launcher-host .pill').waitFor({ state: 'visible' });
+    const invalidClose = await extPage.evaluate(() => chrome.runtime.sendMessage({ type: 'ui:close-panel', payload: { tabId: -1 } }));
+    assert(invalidClose.ok === false, '关闭操作拒绝无效标签页，不退回其他活动页面');
     await openDock();
     const dockFrame = page.frameLocator('#vma-dock-host iframe');
+    await dockFrame.locator('body').evaluate(body => {
+      window.__closeClicks = [];
+      body.addEventListener('click', event => window.__closeClicks.push({ target: event.target?.getAttribute?.('aria-label'), trusted: event.isTrusted }), true);
+    });
     await dockFrame.getByRole('button', { name: '关闭面板', exact: true }).click();
     try { await page.locator('#vma-dock-host').waitFor({ state: 'detached' }); }
-    catch (error) { log('侧栏关闭消息诊断', await page.evaluate(() => window.__dockMessageTrace)); throw error; }
-    log('侧栏关闭消息已处理', await page.evaluate(() => window.__dockMessageTrace));
+    catch (error) {
+      log('侧栏关闭诊断', { targets: await worker.evaluate(() => self.__dockCloseTargets), frame: await dockFrame.locator('body').evaluate(() => ({ url: location.href, parentIsSelf: parent === window, runtime: Boolean(chrome.runtime), clicks: window.__closeClicks })), consoleErrors });
+      await page.screenshot({ path: path.join(ARTIFACTS, 'dock-close-failure.png') });
+      throw error;
+    }
+    assert((await worker.evaluate(() => self.__dockCloseTargets)).includes(tabId), '关闭操作经扩展内部通道送达正确视频标签页');
     await page.waitForTimeout(1400);
     assert(await page.locator('#vma-dock-host').count() === 0, '关闭后状态刷新不会重新弹出侧栏');
     await openDock();

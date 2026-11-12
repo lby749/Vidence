@@ -239,6 +239,7 @@ export type BackgroundToContent =
       payload: { enabled: boolean; intervalMs?: number; maskRoi?: NormRect };
     }
   | { type: 'capture:probe'; payload: {} }
+  | { type: 'capture:close-panel'; payload: {} }
   | { type: 'capture:pick-roi'; payload: {} };
 
 export interface FrameResult {
@@ -295,6 +296,7 @@ export interface AppStateSnapshot {
 }
 
 export type UiRequest =
+  | { type: 'ui:close-panel'; payload: { tabId: number } }
   | { type: 'ui:get-state'; payload?: { tabId?: number } }
   | { type: 'ui:start'; payload: { tabId: number } }
   | { type: 'ui:pause' }

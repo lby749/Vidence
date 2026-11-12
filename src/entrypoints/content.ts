@@ -400,6 +400,10 @@ export default defineContentScript({
       message: BackgroundToContent,
     ): Promise<FrameResult | { error: string } | { ok: true } | { roi: NormRect | null } | { probe: VideoProbe | null }> => {
       switch (message.type) {
+        case 'capture:close-panel': {
+          closeDock();
+          return { ok: true };
+        }
         case 'capture:start': {
           player.refresh();
           applyRecording(message.payload);

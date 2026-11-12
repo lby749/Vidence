@@ -57,6 +57,12 @@ export default function App() {
   const probe = state.probe;
   const frozen = useRef(0);
 
+  const closePanel = () => {
+    const targetTabId = tabId ?? Number(new URLSearchParams(location.search).get('tabId') ?? NaN);
+    if (!Number.isSafeInteger(targetTabId)) return;
+    void sendUi({ type: 'ui:close-panel', payload: { tabId: targetTabId } }).catch(error => setToast((error as Error).message));
+  };
+
   useEffect(() => {
     if (selected.length > 0) setTab('ask');
   }, [selected.length]);
@@ -69,7 +75,7 @@ export default function App() {
     };
     const onKeyDown = (event: KeyboardEvent) => {
       if (event.key === 'Escape' && EMBEDDED) {
-        window.parent.postMessage({ type: 'vma:close-dock' }, '*');
+        closePanel();
       }
     };
     window.addEventListener('message', onMessage);
@@ -78,7 +84,7 @@ export default function App() {
       window.removeEventListener('message', onMessage);
       window.removeEventListener('keydown', onKeyDown);
     };
-  }, []);
+  }, [tabId]);
 
   useEffect(() => {
     return () => {
@@ -244,7 +250,7 @@ export default function App() {
             className="btn ghost"
             title="关闭面板"
             aria-label="关闭面板"
-            onClick={() => window.parent.postMessage({ type: 'vma:close-dock' }, '*')}
+            onClick={closePanel}
           >
             ×
           </button>
