@@ -6,6 +6,12 @@
 
 Vidence 是一款 AI 视频学习助手。看网课、教程或本地视频时，它可以帮你记录重点、整理笔记、解答疑问；看完以后，还能找到之前学过的内容，回到相关片段复习。
 
+## 下载与使用
+
+**[下载 Windows 版 · BETA 测试版](https://github.com/lby749/Vidence/releases/download/v0.1.0-beta.3/Vidence-Windows-x64.zip)** · [查看全部版本](https://github.com/lby749/Vidence/releases)
+
+下载后完整解压，打开文件夹里的 **“一键启动.exe”** 即可。无需安装开发工具；浏览器插件也从启动器安装。
+
 <p align="center"><img src="assets/brand/project-cover.png" width="360" alt="项目配图：连接知识的星空"/></p>
 
 ## 它能帮你做什么
@@ -22,7 +28,7 @@ Vidence 是一款 AI 视频学习助手。看网课、教程或本地视频时�
 
 目前提供 **Windows 应用**和 **Chrome / Edge 浏览器扩展**，支持本地 MP4、网页视频与网课窗口。
 
-1. 到[下载页面](https://github.com/lby749/Vidence/releases)下载 `Vidence-Windows-x64.zip`，完整解压后打开“一键启动.exe”。
+1. 点击[下载 Windows 版](https://github.com/lby749/Vidence/releases/download/v0.1.0-beta.3/Vidence-Windows-x64.zip)，完整解压后打开“一键启动.exe”。
 2. 打开本地视频，或选择课程网址、正在上课的窗口。
 3. 在右侧学习栏开始记录、提问，结束后到视频库继续整理和复习。
 
