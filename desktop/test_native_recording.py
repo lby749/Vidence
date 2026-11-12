@@ -44,5 +44,22 @@ class NativeRecordingChecks(unittest.TestCase):
         mean,cells=Recorder.difference(Recorder.signature(red),Recorder.signature(blue))
         self.assertGreater(mean,.1); self.assertGreater(cells,6)
 
+    def test_missing_first_frame_reports_waiting_and_does_not_save(self):
+        frame=Mock(); frame.isValid.return_value=False; self.bridge.latest_frame=frame
+        messages=[]; self.recorder.problem.connect(messages.append); self.recorder.start('math'); self.recorder.started-=6
+        self.recorder.sample(); self.recorder.sample()
+        self.assertEqual(len(messages),1); self.assertIn('播放片刻',messages[0])
+        self.assertEqual(self.store.rows('keyframes','math'),[])
+
+    def test_manual_save_keeps_valid_paused_frame_without_automatic_duplicates(self):
+        image=QImage(320,180,QImage.Format.Format_RGB32); image.fill(Qt.GlobalColor.blue)
+        frame=Mock(); frame.isValid.return_value=True; frame.toImage.return_value=image; self.bridge.latest_frame=frame
+        self.bridge.latest_frame_stamp=time.time_ns()-20_000_000_000
+        self.recorder.start('math'); self.recorder.sample()
+        self.assertEqual(self.store.rows('keyframes','math'),[])
+        self.recorder.sample(True)
+        rows=self.store.rows('keyframes','math'); self.assertEqual(len(rows),1)
+        self.assertEqual(rows[0]['width'],320); self.assertEqual(rows[0]['videoId'],'math')
+
 
 if __name__=='__main__':unittest.main()

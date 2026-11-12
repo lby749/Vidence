@@ -14,7 +14,7 @@ Vidence 是一款 AI 视频学习助手。看网课、教程或知识视频时�
 
 | 下载 | 怎么使用 |
 | --- | --- |
-| **[Windows 原生桌面版 0.4.2](https://github.com/lby749/Vidence/releases/download/desktop-v0.4.2/Vidence-Desktop-Windows-x64.zip)** | 完整解压，双击“一键启动.exe”；播放本地视频，或把学习栏靠在已经打开的课程窗口旁 |
+| **[Windows 原生桌面版 0.4.3](https://github.com/lby749/Vidence/releases/download/desktop-v0.4.3/Vidence-Desktop-Windows-x64.zip)** | 完整解压，双击“一键启动.exe”；播放本地视频，或把学习栏靠在已经打开的课程窗口旁 |
 | **[Windows 安装引导 EXE](https://github.com/lby749/Vidence/releases/download/v0.4.1/Vidence-Extension-Setup-Windows.exe)**（推荐 Windows 10 / 11） | 直接双击，选择浏览器，点击安装并打开浏览器；无需解压、CMD 或开发工具 |
 | **[纯插件 ZIP](https://github.com/lby749/Vidence/releases/download/v0.4.1/Vidence-Browser-Extension.zip)** | 完整解压，在扩展管理页加载包含 `manifest.json` 的文件夹；适合手动安装和 macOS / Linux |
 
@@ -47,7 +47,7 @@ API 问答不依赖桌面程序。本机 OpenCode Go / DSH 等智能体属于可
 
 ## 反馈与建议
 
-当前桌面版为 **0.4.2**，浏览器插件为 **0.4.1**，仍在持续完善。如果遇到问题，或有什么改进建议，欢迎通过[问题反馈与建议](https://github.com/lby749/Vidence/issues/new/choose)提出，非常感谢！
+当前桌面版为 **0.4.3**，浏览器插件为 **0.4.1**，仍在持续完善。如果遇到问题，或有什么改进建议，欢迎通过[问题反馈与建议](https://github.com/lby749/Vidence/issues/new/choose)提出，非常感谢！
 
 应用内也可以在“设置 → 应用更新”点击“反馈问题或建议”。
 

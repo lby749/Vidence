@@ -122,4 +122,4 @@ jobs:
             echo 'This desktop version already exists; published files stay unchanged.'
             exit 0
           fi
-          gh release create "$tag" release/Vidence-Desktop-Windows-x64.zip release/Vidence-Desktop-Windows-x64.zip.sha256 --target "$GITHUB_SHA" --latest=false --title "Vidence Desktop 0.4.2 · 原生桌面版" --notes-file docs/desktop-release-notes.md
+          gh release create "$tag" release/Vidence-Desktop-Windows-x64.zip release/Vidence-Desktop-Windows-x64.zip.sha256 --target "$GITHUB_SHA" --latest=false --title "Vidence Desktop ${tag#desktop-v} · 原生桌面版" --notes-file docs/desktop-release-notes.md

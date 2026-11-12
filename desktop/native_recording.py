@@ -22,12 +22,14 @@ class Recorder(QObject):
         self.timer = QTimer(self); self.timer.setInterval(1200); self.timer.timeout.connect(self.sample)
         self.ocr_busy = False
         self.last_ocr = 0
+        self.waiting_warned = False
 
     def start(self, video_id):
         self.stop(); self.video_id = video_id
         self.started = time.monotonic(); self.previous = self.saved = None
         self.offset=max([row.get('endTime',row.get('time',0)) for kind in ('keyframes','evidence') for row in self.store.rows(kind,video_id)]+[0]) if self.bridge.mode=='window' else 0
         self.last_saved = self.pending = 0
+        self.waiting_warned = False
         self.session = uuid.uuid4().hex
         self.store.put('sessions', video_id, {'id': self.session, 'createdAt': int(time.time()*1000)})
         self.timer.start(); self.changed.emit()
@@ -63,8 +65,13 @@ class Recorder(QObject):
         if self.bridge.mode == 'local' and not self.bridge.player.isPlaying() and not manual: return
         if self.bridge.capture_error or self.bridge.media_error:
             self.problem.emit(self.bridge.capture_error or self.bridge.media_error); self.stop(); return
-        if not self.bridge.latest_frame.isValid(): return
-        if time.time_ns() - self.bridge.latest_frame_stamp > 8_000_000_000: return
+        if not self.bridge.latest_frame.isValid():
+            if manual or (not self.waiting_warned and time.monotonic()-self.started>=5):
+                self.waiting_warned=True; self.problem.emit('尚未取得课程画面，请保持课程窗口可见，播放片刻后再记录。')
+            return
+        if self.waiting_warned:
+            self.waiting_warned=False; self.problem.emit('已取得课程画面，可以继续记录。')
+        if not manual and time.time_ns() - self.bridge.latest_frame_stamp > 8_000_000_000: return
         image = self.bridge.latest_frame.toImage()
         if image.isNull(): return
         signature = self.signature(image)

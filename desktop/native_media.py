@@ -321,6 +321,8 @@ class NativeBridge(QObject):
         error = self.media_error if self.mode == 'local' else self.capture_error
         if error:
             return result(error=f'无法取得所选画面：{error}')
+        if self.mode=='window' and self.capture.isActive() and not self.latest_frame.isValid():
+            return result(error='尚未取得课程画面，请保持课程窗口可见，播放片刻后再记录。')
         self.encode_preview()
         data = dict(self.latest)
         if self.mode == 'window' and self.capture.isActive() and data and time.time() * 1000 - data['capturedAt'] > 8000:

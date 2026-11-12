@@ -19,6 +19,8 @@ try {
     if (-not $launcher.WaitForExit(60000)) { $launcher.Kill(); throw 'Frozen launcher timed out' }
     if ($launcher.ExitCode -ne 0) { throw 'Frozen launcher self-check failed' }
     $report = Get-Content -LiteralPath $reportPath -Raw | ConvertFrom-Json
+    $buildInfo = Get-Content -LiteralPath (Join-Path $packagePath '_internal/build-info.json') -Raw | ConvertFrom-Json
+    if ($report.version -ne $buildInfo.version) { throw 'Frozen version differs from build metadata' }
     if (-not ($report.passed -and $report.frozen -and $report.nativeWidgetsImported -and $report.nativeSidebarConstructed -and $report.systemOcr.passed)) { throw 'Frozen native runtime was not verified' }
     if ($report.bundledBrowserKernel -or $report.extensionBundled) { throw 'Desktop package contains browser or extension resources' }
     if ($Media -and -not $report.videoPlayback.passed) { throw 'Frozen video playback was not verified' }

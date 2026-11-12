@@ -1,5 +1,6 @@
 from types import SimpleNamespace
 import unittest
+import json
 from unittest.mock import Mock, patch
 from PySide6.QtCore import QRect
 from PySide6.QtGui import QImage, QColor
@@ -8,6 +9,12 @@ from presentation import Presentation
 
 
 class CaptureChecks(unittest.TestCase):
+    def test_initial_window_frame_has_explicit_not_ready_error(self):
+        capture=Mock(); capture.isActive.return_value=True
+        frame=Mock(); frame.isValid.return_value=False
+        owner=SimpleNamespace(mode='window',capture_error='',capture=capture,latest_frame=frame)
+        self.assertIn('播放片刻',json.loads(NativeBridge.frame(owner))['error'])
+
     def test_video_callbacks_only_cache_frames_without_encoding_or_throttling(self):
         owner = SimpleNamespace(mode='local', player=Mock())
         frames = [Mock() for _ in range(60)]

@@ -14,6 +14,8 @@ NATIVE_EN.update({'连接已有服务':'Connect to an existing service','选择�
 NATIVE_TW.update({'连接已有服务':'連線至既有服務','选择配对文件':'選擇配對檔案','连接':'連線','已有服务的连接令牌':'既有服務的連線權杖'})
 NATIVE_EN.update({'关闭学习栏':'Close learning sidebar','关闭学习栏并停止记录，视频继续播放':'Close sidebar and stop recording; keep the video playing'})
 NATIVE_TW.update({'关闭学习栏':'關閉學習欄','关闭学习栏并停止记录，视频继续播放':'關閉學習欄並停止記錄，影片繼續播放'})
+NATIVE_EN.update({'尚未取得课程画面，请保持课程窗口可见，播放片刻后再记录。':'No course frame yet. Keep the course window visible and play briefly, then record again.','已取得课程画面，可以继续记录。':'Course frame received. Recording can continue.','选择或搜索模型':'Choose or search models','连接设置':'Connection settings'})
+NATIVE_TW.update({'尚未取得课程画面，请保持课程窗口可见，播放片刻后再记录。':'尚未取得課程畫面，請保持課程視窗可見，播放片刻後再記錄。','已取得课程画面，可以继续记录。':'已取得課程畫面，可以繼續記錄。','选择或搜索模型':'選擇或搜尋模型','连接设置':'連線設定'})
 _root=Path(sys._MEIPASS) if getattr(sys,'frozen',False) else Path(__file__).resolve().parents[1]
 for locale,target,native in [('en',EN,NATIVE_EN),('zh-TW',TW,NATIVE_TW)]:
     file=_root/'src/ui/locales'/f'{locale}.json'

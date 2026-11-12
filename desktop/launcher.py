@@ -91,6 +91,7 @@ def self_check(app,window,report_path):
         file=Path(os.environ.get('WINDIR',r'C:\Windows'))/'Fonts'/name
         if file.is_file():QFontDatabase.addApplicationFont(str(file))
     assert (APP_DIR/'Vidence.exe').is_file()
+    assert json.loads((ROOT/'build-info.json').read_text(encoding='utf8'))['version']==VERSION
     forbidden=[file.name for file in ROOT.rglob('*') if file.is_file() and ('webengine' in file.name.lower() or 'devtools_resources' in file.name.lower())]
     assert not forbidden,forbidden
     assert not (ROOT/'.output').exists(),'桌面包不应包含扩展构建'
@@ -133,7 +134,7 @@ def self_check(app,window,report_path):
         assert not error and position>=2500 and decoded[0]>=90 and len(set(samples))==2,(position,decoded[0],error)
         playback={'passed':True,'scope':'frozen-qt-h264-decode-not-screen-present-rate','decodedFrames':decoded[0],'positionMs':position,'decodedSizes':sorted(sizes),'distinctPixelSamples':len(set(samples))}
     assert not any('QtWebEngine' in name for name in sys.modules)
-    report={'passed':True,'frozen':FROZEN,'nativeWidgetsImported':True,'nativeSidebarConstructed':True,'bundledBrowserKernel':False,'extensionBundled':False,'bundledNode':node.stdout.strip(),'systemOcr':{'passed':True,'scope':'generated-English-image','text':recognized},'videoPlayback':playback}
+    report={'passed':True,'version':VERSION,'frozen':FROZEN,'nativeWidgetsImported':True,'nativeSidebarConstructed':True,'bundledBrowserKernel':False,'extensionBundled':False,'bundledNode':node.stdout.strip(),'systemOcr':{'passed':True,'scope':'generated-English-image','text':recognized},'videoPlayback':playback}
     report_path.write_text(json.dumps(report,ensure_ascii=False,indent=2),encoding='utf8')
 
 
