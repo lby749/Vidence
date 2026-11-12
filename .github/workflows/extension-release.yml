@@ -1,0 +1,93 @@
+name: Browser extension - clean validation and release
+on:
+  push:
+    branches: [main]
+    paths:
+      - 'src/**'
+      - 'public/**'
+      - 'scripts/**'
+      - 'docs/**'
+      - 'README.md'
+      - 'AGENTS.md'
+      - 'package*.json'
+      - 'wxt.config.ts'
+      - '.github/workflows/extension-release.yml'
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  validate:
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest, windows-latest]
+    runs-on: ${{ matrix.os }}
+    env:
+      E2E_BROWSER: chromium
+      E2E_HEADLESS: '1'
+      PYTHONUTF8: '1'
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          persist-credentials: false
+      - uses: actions/setup-node@v7
+        with:
+          node-version: '24'
+          package-manager-cache: false
+      - uses: actions/setup-python@v7
+        with:
+          python-version: '3.12'
+      - run: npm ci
+      - run: npm run compile
+      - run: npm test
+      - run: npm run build
+      - run: npx playwright install --with-deps chromium
+      - run: python scripts/package-extension.py dist/Vidence-Browser-Extension.zip
+      - run: python scripts/extension-package-check.py dist/Vidence-Browser-Extension.zip
+      - run: node scripts/bridge-check.mjs
+      - uses: actions/upload-artifact@v7
+        if: matrix.os == 'ubuntu-latest'
+        with:
+          name: standalone-browser-extension
+          path: |
+            dist/Vidence-Browser-Extension.zip
+            dist/Vidence-Browser-Extension.zip.sha256
+      - uses: actions/upload-artifact@v7
+        if: always()
+        with:
+          name: extension-evidence-${{ matrix.os }}
+          path: artifacts/
+          retention-days: 14
+  release:
+    needs: validate
+    if: github.ref == 'refs/heads/main'
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          persist-credentials: false
+      - uses: actions/download-artifact@v7
+        with:
+          name: standalone-browser-extension
+          path: dist
+      - name: Publish standalone extension
+        shell: bash
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          set -euo pipefail
+          version=$(node -p "require('./package.json').version")
+          tag="v$version"
+          if gh release view "$tag" --json isDraft > /tmp/vidence-release.json 2>/dev/null; then
+            if [ "$(node -p "require('/tmp/vidence-release.json').isDraft")" = false ]; then
+              echo "Existing published release is immutable; bump the version for another release."
+              exit 0
+            fi
+            echo "A draft already exists; inspect it before publishing."
+            exit 1
+          fi
+          (cd dist && sha256sum --check Vidence-Browser-Extension.zip.sha256)
+          gh release create "$tag" dist/Vidence-Browser-Extension.zip dist/Vidence-Browser-Extension.zip.sha256 --target "$GITHUB_SHA" --title "Vidence $version · 浏览器插件" --notes-file docs/extension-release-notes.md --draft
+          gh release edit "$tag" --draft=false --prerelease=false --latest

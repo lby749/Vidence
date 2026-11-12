@@ -2,14 +2,14 @@ import { Localized, useUiLocale } from '@/ui/i18n';
 import AppUpdates from '@/ui/AppUpdates';
 import { orderForLocale } from '@/ui/locale-order';
 import { useEffect, useMemo, useRef, useState } from 'react';
-import { getSettings, saveSettings } from '@/db/db';
-import { localAgentRequest } from '@/agent/local-agent-client';
+import { getSettings } from '@/db/db';
 import type { Settings } from '@/shared/types';
 import type { Citation } from '@/shared/types';
 import type { AppStateSnapshot } from '@/shared/messages';
 import { formatClock, sendUi } from '@/ui/chrome';
 import { useAppState } from '@/ui/useAppState';
 import RichText from '@/ui/RichText';
+import AssistantPicker from '@/entrypoints/library/AssistantPicker';
 
 type TabKey = 'nodes' | 'ask';
 
@@ -34,28 +34,15 @@ export default function App() {
   const [followUp, setFollowUp] = useState(false);
   const [route, setRoute] = useState<'api' | 'ai-app' | 'local-agent'>('api');
   const [settings, setSettings] = useState<Settings | null>(null);
-  const [agentToken, setAgentToken] = useState('');
-  const [agentBackend, setAgentBackend] = useState<'opencode-go' | 'dsh' | 'codex' | 'claude'>('opencode-go');
-  const [agentModel, setAgentModel] = useState('');
-  const [agentModels, setAgentModels] = useState<Array<{ id: string; label: string }>>([]);
-  const [manualModel, setManualModel] = useState(false);
-  const [modelSource, setModelSource] = useState('连接后获取模型列表，也可手动填写模型名');
-  const [agentSettingsOpen, setAgentSettingsOpen] = useState(false);
   useEffect(() => {
     void getSettings().then(next => {
-      setSettings(next); setAgentToken(next.localAgent?.token ?? ''); setAgentBackend(next.localAgent?.backend ?? 'opencode-go');
-      setAgentSettingsOpen(!next.localAgent?.token);
-      const model = next.localAgent?.model ?? ''; setAgentModel(model);
-      if (model) setAgentModels([{ id: model, label: model }]);
-      if (next.localAgent?.token) {
-        setRoute('local-agent');
-        void localAgentRequest(next.localAgent, 'models').then(report => {
-          setAgentModels(report.models ?? []); setModelSource(report.source ?? '');
-          setManualModel(Boolean(model && !report.models?.some(item => item.id === model)));
-        }).catch(error => setModelSource((error as Error).message));
-      }
+      setSettings(next);
+      setRoute(next.preferredQaRoute ?? (next.localAgent?.token ? 'local-agent' : 'api'));
     });
-    const reload = () => void getSettings().then(setSettings);
+    const reload = () => void getSettings().then(next => {
+      setSettings(next);
+      setRoute(current => current === 'ai-app' ? current : next.preferredQaRoute ?? current);
+    });
     window.addEventListener('focus', reload);
     return () => window.removeEventListener('focus', reload);
   }, []);
@@ -115,18 +102,6 @@ export default function App() {
     }
   };
 
-  const loadAgentModels = async () => {
-    const localAgent = { backend: agentBackend, token: agentToken.trim(), model: agentModel.trim() };
-    const health = await localAgentRequest(localAgent, 'health');
-    if (!health.backends?.[agentBackend]?.available) throw new Error(health.backends?.[agentBackend]?.reason ?? '本机未找到该智能体');
-    const report = await localAgentRequest(localAgent, 'models');
-    const models = report.models ?? [];
-    const model = localAgent.model || (agentBackend === 'opencode-go' ? models.find(item => item.id === 'deepseek-v4.1-flash')?.id : undefined) || models[0]?.id || '';
-    setAgentModels(models); setAgentModel(model); setManualModel(Boolean(model && !models.some(item => item.id === model)));
-    setModelSource(report.source ?? '');
-    return { ...localAgent, model };
-  };
-
   const start = () =>
     run('start', async () => {
       if (tabId === undefined) throw new Error('没有可用标签页');
@@ -178,10 +153,6 @@ export default function App() {
           message: `已打开应用并填入问题（${prepared.evidenceCount} 条证据，${prepared.promptChars} 字），请确认后发送`,
         });
         return;
-      }
-      if (route === 'local-agent') {
-        if (!agentModel.trim()) throw new Error('请先选择或填写问答模型');
-        setSettings(await saveSettings({ localAgent: { backend: agentBackend, token: agentToken.trim(), model: agentModel.trim() } }));
       }
       await send({
         type: 'ui:ask',
@@ -257,11 +228,11 @@ export default function App() {
   const statusPill = state.recording ? (state.paused ? '已暂停' : '记录中') : '未记录';
 
   return <Localized>{(
-    <div className="app">
+    <div className="app browser-sidepanel">
       <div className="topbar">
         <div className="brand">
           <img className="brand-mark" src="/brand/icon-128.png" alt="" aria-hidden="true"/>
-          Vidence <span className="beta-badge">BETA</span>
+          Vidence
         </div>
         <span className={`pill ${state.recording ? 'ok' : ''}`}>{statusPill}</span>
         <div className="spacer" />
@@ -379,10 +350,10 @@ export default function App() {
 
       <div className="row section">
         <button className="btn" onClick={() => void chrome.tabs.create({ url: chrome.runtime.getURL('library.html?tab=settings#api') })}>配置 API</button>
-        <button className="btn" onClick={() => { setTab('ask'); setRoute('local-agent'); setAgentSettingsOpen(true); }}>选择智能体</button>
         <button className="btn" onClick={() => void chrome.tabs.create({ url: chrome.runtime.getURL('library.html?tab=memory') })}>长期记忆</button>
       </div>
 
+      {settings && <div className="section"><AssistantPicker settings={settings} inline disabled={busy !== null} onSettings={next => { setSettings(next); setRoute(next.preferredQaRoute ?? 'api'); }}/></div>}
       <div className="tabs">
         <button className={`tab ${tab === 'nodes' ? 'active' : ''}`} onClick={() => setTab('nodes')}>
           节点 {state.nodes.length > 0 ? `(${state.nodes.length})` : ''}
@@ -452,37 +423,9 @@ export default function App() {
             </div>
 
             {route === 'api' && (!settings?.roles.answerModel?.modelId || !settings.providers.some(p => p.id === settings.roles.answerModel?.providerId && p.apiKey)) && (
-              <div className="banner">先点击“配置 API”填写提供商、密钥和问答模型，或选择 AI 应用 / 本地智能体。</div>
+              <div className="banner">先点击“配置 API”连接自己的服务，自动获取模型；也可以选择已连接的 AI 助手。</div>
             )}
-            {route === 'local-agent' && (
-              <div className="ask-box">
-                <details className="connection-settings" open={agentSettingsOpen} onToggle={e => setAgentSettingsOpen(e.currentTarget.open)}><summary>连接设置 · {settings?.localAgent?.token ? '已保存配置' : '首次使用请连接'}</summary><div className="ask-box">
-                <select className="field" aria-label="本地智能体" value={agentBackend} onChange={e => { setAgentBackend(e.target.value as typeof agentBackend); setAgentModel(''); setAgentModels([]); setManualModel(false); setModelSource('切换智能体后请重新获取模型列表'); }}>
-                  {orderForLocale([{id:'opencode-go',label:'OpenCode Go（通过 DSH）'},{id:'dsh',label:'DeepSeek Harness（订阅账号）'},{id:'codex',label:'Codex CLI'},{id:'claude',label:'Claude Code'}],locale,'agent',item=>item.id).map(item=><option key={item.id} value={item.id}>{item.label}</option>)}
-                </select>
-                <input className="field" type="password" aria-label="桥接令牌" placeholder="本地桥接令牌" value={agentToken} onChange={e => setAgentToken(e.target.value)} />
-                <div className="faint">首次使用：双击“启动本地智能体.cmd”，粘贴自动复制的连接令牌。</div>
-                <button className="btn" disabled={busy !== null} onClick={() => void run('agent-test', async () => {
-                  const localAgent = await loadAgentModels();
-                  setSettings(await saveSettings({ localAgent })); setToast('已连接并保存，发送问题后调用所选智能体');
-                })}>连接测试并保存</button>
-                </div></details>
-                <label className="faint" style={{ fontSize: 12 }}>问答模型</label>
-                <select className="field" aria-label="问答模型" value={manualModel ? '__custom__' : agentModel} onChange={e => {
-                  const custom = e.target.value === '__custom__'; setManualModel(custom); setAgentModel(custom ? '' : e.target.value);
-                }}>
-                  <option value="">请选择模型</option>
-                  {agentModels.map(model => <option key={model.id} value={model.id}>{model.label}</option>)}
-                  <option value="__custom__">手动填写模型名</option>
-                </select>
-                {manualModel && <input className="field" aria-label="自定义模型名" placeholder="输入该智能体支持的模型名" value={agentModel} onChange={e => setAgentModel(e.target.value)} />}
-                <div className="row">
-                  <button className="btn ghost" disabled={busy !== null} onClick={() => void run('agent-models', async () => { await loadAgentModels(); setToast('模型列表已更新'); })}>刷新模型列表</button>
-                  <span className="faint" style={{ fontSize: 11 }}>{modelSource}</span>
-                </div>
-                <div className="faint" style={{ fontSize: 11 }}>先读本视频摘要，再按需核对原文。{agentBackend === 'opencode-go' ? ' 思考强度：high。' : ''}</div>
-              </div>
-            )}
+            {route === 'local-agent' && !settings?.localAgent?.token && <div className="banner">请先在设置中连接电脑上的 AI 助手；也可以直接使用 API 服务。</div>}
 
             {selectedNodes.length > 0 && (
               <div className="row" style={{ fontSize: 11 }}>

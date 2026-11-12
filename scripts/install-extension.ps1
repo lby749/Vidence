@@ -4,7 +4,7 @@ if (-not (Test-Path -LiteralPath (Join-Path $sourcePath 'manifest.json'))) { thr
 $destinationPath = Join-Path $env:LOCALAPPDATA 'VideoMemoryAssistant/browser-extension'
 New-Item -ItemType Directory -Force -Path $destinationPath | Out-Null
 Get-ChildItem -LiteralPath $sourcePath -Force | Copy-Item -Destination $destinationPath -Recurse -Force
-Write-Host 'Vidence 浏览器插件 · BETA'
+Write-Host 'Vidence 浏览器插件'
 Write-Host '1. Microsoft Edge    2. Google Chrome'
 $selection = Read-Host '选择浏览器（默认 1）'
 if ($selection -eq '2') { $browserName = 'chrome.exe'; $extensionsPage = 'chrome://extensions/' }

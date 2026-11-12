@@ -17,28 +17,28 @@ const STYLE = `
   .dock {
     position: fixed; top: 0; right: 0; height: 100vh; width: 420px; max-width: 96vw;
     z-index: 2147483646; display: flex; flex-direction: column;
-    background: #faf7f2; border-left: 1px solid #e2d8c9;
-    box-shadow: -12px 0 32px rgba(38,34,30,.16);
+    background: #f5f5f7; border-left: 1px solid #e5e7ec;
+    box-shadow: -12px 0 32px rgba(24,36,60,.14);
     font: 13px/1.5 -apple-system, BlinkMacSystemFont, "Segoe UI", "PingFang SC", "Microsoft YaHei", sans-serif;
-    color: #26221e;
+    color: #263044;
   }
   .bar {
     display: flex; align-items: center; gap: 8px; padding: 8px 10px;
-    background: #f6f0e7; border-bottom: 1px solid #e8e1d6; flex: 0 0 auto;
+    background: #ffffff; border-bottom: 1px solid #e5e7ec; flex: 0 0 auto;
   }
   .mark {
     width: 20px; height: 20px; border-radius: 6px; display: grid; place-items: center;
-    background: linear-gradient(135deg,#b4532a,#d98a4e); color:#fff; font-size: 11px; font-weight: 700;
+    object-fit: cover;
   }
   .title { font-weight: 650; font-size: 12.5px; }
   .spacer { flex: 1; }
   button {
-    font: inherit; font-size: 12px; border: 1px solid #e0d6c7; background: #fffdf9;
-    border-radius: 7px; padding: 3px 8px; cursor: pointer; color: #4b443d;
+    font: inherit; font-size: 12px; border: 1px solid #e5e7ec; background: #ffffff;
+    border-radius: 7px; padding: 3px 8px; cursor: pointer; color: #526077;
   }
-  button:hover { background: #f3ece1; }
+  button:hover { background: #f2f6fc; }
   .close { border-color: transparent; background: transparent; font-size: 16px; line-height: 1; padding: 2px 7px; }
-  iframe { flex: 1; width: 100%; border: 0; background: #faf7f2; }
+  iframe { flex: 1; width: 100%; border: 0; background: #f5f5f7; }
 `;
 
 export function openDock(tabId: number, mode: 'nodes' | 'ask' = 'nodes', onClose?: () => void): void {
@@ -59,13 +59,13 @@ export function openDock(tabId: number, mode: 'nodes' | 'ask' = 'nodes', onClose
     <style>${STYLE}</style>
     <div class="dock" role="complementary" aria-label="Vidence侧边面板">
       <div class="bar">
-        <span class="mark">记</span>
+        <img class="mark" src="${chrome.runtime.getURL('brand/icon-48.png')}" alt=""/>
         <span class="title">Vidence</span>
         <span class="spacer"></span>
         <button id="popout" title="在新标签页打开完整面板">独立页</button>
-        <button id="close" class="close" title="关闭">×</button>
+        <button id="close" class="close" title="关闭" aria-label="关闭学习栏">×</button>
       </div>
-      <iframe id="frame" src="${url}" allow="clipboard-write"></iframe>
+      <iframe title="Vidence 学习栏" id="frame" src="${url}" allow="clipboard-write"></iframe>
     </div>
   `;
   (document.fullscreenElement ?? document.documentElement).appendChild(host);
@@ -78,6 +78,7 @@ export function openDock(tabId: number, mode: 'nodes' | 'ask' = 'nodes', onClose
 
   document.addEventListener('fullscreenchange', onFullscreenChange, true);
   window.addEventListener('message', onWindowMessage);
+  document.addEventListener('keydown', onKeyDown);
 }
 
 function onWindowMessage(event: MessageEvent): void {
@@ -89,6 +90,10 @@ function onWindowMessage(event: MessageEvent): void {
   }
 }
 
+function onKeyDown(event: KeyboardEvent): void {
+  if (event.key === 'Escape' && !document.fullscreenElement) closeDock();
+}
+
 function onFullscreenChange(): void {
   if (!host) return;
   const target = document.fullscreenElement ?? document.documentElement;
@@ -98,6 +103,7 @@ function onFullscreenChange(): void {
 export function closeDock(): void {
   setLauncherHidden(false);
   window.removeEventListener('message', onWindowMessage);
+  document.removeEventListener('keydown', onKeyDown);
   document.removeEventListener('fullscreenchange', onFullscreenChange, true);
   host?.remove();
   host = null;

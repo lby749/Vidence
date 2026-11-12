@@ -985,4 +985,5 @@ body.desktop-fullscreen, body.desktop-attached { overflow:hidden; padding:0; bac
 
 .study-sidebar .assistant-picker.is-inline { inset: auto 10px 12px; width: auto; max-height: calc(100% - 24px); z-index: 60; }
 
-.beta-badge { display: inline-flex; align-items: center; flex-shrink: 0; padding: 3px 7px; border: 1px solid #d2e2fb; border-radius: 6px; background: #edf4ff; color: #496c9e; font-size: 10px; font-weight: 600; letter-spacing: .4px; }
+
+.browser-sidepanel > .assistant-picker.is-inline { position:fixed; inset:12px 12px auto; width:auto; max-height:calc(100dvh - 24px); z-index:40; }

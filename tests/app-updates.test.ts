@@ -1,7 +1,7 @@
 import { afterEach, beforeEach, expect, it, vi } from 'vitest';
 import { APP_VERSION, UPDATE_API, UPDATE_REPOSITORY, checkAppUpdate, compareVersions, deferAppUpdate, newestRelease, readUpdateState, setAutomaticUpdates } from '@/shared/app-updates';
 
-const FUTURE_VERSION = `${Number(APP_VERSION.split('.')[0]) + 1}.0.0-beta.1`;
+const FUTURE_VERSION = `${Number(APP_VERSION.split('.')[0]) + 1}.0.0`;
 const release = (version: string, extra = {}) => ({ tag_name: `v${version}`, html_url: `https://github.com/lby749/Vidence/releases/tag/v${version}`, published_at: '2026-11-11T00:00:00Z', body: '修复画面记录', draft: false, prerelease: version.includes('-'), ...extra });
 let values: Map<string, string>, fetcher: ReturnType<typeof vi.fn>;
 beforeEach(() => {

@@ -58,3 +58,14 @@
 托管runner预装Python/Node/WebView2，因此不能把PATH隔离和冻结程序解码说成物理卸载全部软件，真实缺少WebView2的安装仍未验证。Codex云任务的原始基线检查曾受浏览器下载域名策略限制；后续GitHub云端已完成对应浏览器检查，不掩盖两种环境的差异。
 
 感谢您的支持，如果有帮助的话，请点一个 [STAR](https://github.com/lby749/Vidence)，谢谢！
+
+
+## 0.4.0 独立浏览器插件
+
+当前范围是独立插件，原生桌面单独验收，不随本次插件发布。用户要求移除 BETA 标识，版本改为 0.4.0；这不表示此前列出的未实现能力已经完成。
+
+验收命令：`npm ci`、`npm run compile`、`npm test`、`npm run build`、`python scripts/package-extension.py dist/Vidence-Browser-Extension.zip`、`python scripts/extension-package-check.py dist/Vidence-Browser-Extension.zip`、`node scripts/bridge-check.mjs`。
+
+最终ZIP在新临时目录解压，并直接从那个目录加载到隔离浏览器，检查包完整性、禁止文件、原始许可、字幕记录与检索、关闭后不自弹的页面侧栏、API目录与用户选定模型的实际流式探测、栏内模型切换持久化、三语言更新/反馈与设置。API为自建受控服务，不是新增真实模型验收。Windows安装引导在系统PowerShell中以隔离LOCALAPPDATA和禁止实际打开浏览器的桩验证安装/重复更新，不触碰用户插件。
+
+云端使用无项目依赖缓存的Linux和Windows托管机器，从源码安装开发依赖，再检测成品。插件运行只需要已有的Chrome/Edge；云端开发测试需要Node/Python不能解释为用户运行也需要它们。macOS、所有真实网站账号与物理空白机器不在本轮实测范围。

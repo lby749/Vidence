@@ -5,16 +5,16 @@ import { pathToFileURL } from 'node:url';
 import { chromium } from 'playwright';
 
 const [extension, profile, internal] = process.argv.slice(2).map(value => path.resolve(value));
-const { extensionIdForPath } = await import(pathToFileURL(path.join(internal, 'scripts/local-agent-bridge.mjs')));
+const extensionIdForPath = internal ? (await import(pathToFileURL(path.join(internal, 'scripts/local-agent-bridge.mjs')))).extensionIdForPath : null;
 const context = await chromium.launchPersistentContext(profile, {
-  channel: 'msedge', headless: true, locale: 'zh-CN',
+  channel: process.env.E2E_BROWSER ?? 'msedge', headless: true, locale: 'zh-CN',
   args: [`--load-extension=${extension}`, `--disable-extensions-except=${extension}`, '--disable-gpu', '--no-first-run'],
 });
 try {
   let [worker] = context.serviceWorkers();
   worker ??= await context.waitForEvent('serviceworker');
   const id = new URL(worker.url()).host;
-  assert.equal(id, extensionIdForPath(extension), '安装目录身份必须与桥接一致');
+  if (extensionIdForPath) assert.equal(id, extensionIdForPath(extension), '安装目录身份必须与桥接一致');
   const page = await context.newPage();
   await page.goto(`chrome-extension://${id}/library.html?tab=settings`);
   await page.getByRole('heading', { name: '给学习找个好伙伴。' }).waitFor();

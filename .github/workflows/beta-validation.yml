@@ -1,7 +1,5 @@
-name: BETA clean checkout and portable Windows
+name: Native desktop validation (manual)
 on:
-  push:
-    branches: [main, codex/native-desktop-split]
   workflow_dispatch:
 permissions:
   contents: read
@@ -157,4 +155,4 @@ jobs:
           else
             gh release create "$tag" release/Vidence-Desktop-Windows-x64.zip release/Vidence-Desktop-Windows-x64.zip.sha256 release/Vidence-Browser-Extension.zip release/Vidence-Browser-Extension.zip.sha256 --target "$GITHUB_SHA" --draft --prerelease --title "Vidence $tag · BETA" --notes-file docs/release-notes.md
           fi
-          gh release edit "$tag" --draft=false --prerelease --latest=false
+          echo 'Draft and both packages are ready. Publish only after visible native playback/sidebar validation.'

@@ -6,18 +6,18 @@ import path from 'node:path';
 import { chromium } from 'playwright';
 
 fs.mkdirSync('artifacts', { recursive: true });
-const extension = path.resolve('.output/chrome-mv3');
+const extension = path.resolve(process.env.VMA_EXTENSION_PATH ?? '.output/chrome-mv3');
 const context = await chromium.launchPersistentContext(fs.mkdtempSync(path.join(os.tmpdir(), 'vma-update-ui-')), {
   channel: process.env.E2E_BROWSER ?? 'msedge', headless: true, locale: 'zh-CN', viewport: { width: 1100, height: 950 },
   args: [`--load-extension=${extension}`, `--disable-extensions-except=${extension}`, '--disable-gpu', '--no-first-run'],
 });
 const current = JSON.parse(fs.readFileSync('package.json', 'utf8')).version;
 const [major, minor] = current.split('.').map(Number);
-let calls = 0, version = `${major}.${minor + 1}.0-beta.1`, status = 200;
+let calls = 0, version = `${major}.${minor + 1}.0`, status = 200;
 const report = { scope: 'isolated-browser-release-feed-fixture', liveReleaseClaim: false };
 try {
   await context.route('https://api.github.com/repos/lby749/Vidence/releases?*', route => {
-    calls++; return route.fulfill({ status, contentType: 'application/json', body: JSON.stringify(status === 200 ? [{ tag_name: `v${version}`, html_url: `https://github.com/lby749/Vidence/releases/tag/v${version}`, published_at: '2026-11-11T00:00:00Z', prerelease: true, draft: false, body: '修复持续运动的画面记录。<img src=x onerror=alert(1)>' }] : {}) });
+    calls++; return route.fulfill({ status, contentType: 'application/json', body: JSON.stringify(status === 200 ? [{ tag_name: `v${version}`, html_url: `https://github.com/lby749/Vidence/releases/tag/v${version}`, published_at: '2026-11-11T00:00:00Z', prerelease: false, draft: false, body: '修复持续运动的画面记录。<img src=x onerror=alert(1)>' }] : {}) });
   });
   let [worker] = context.serviceWorkers(); worker ??= await context.waitForEvent('serviceworker');
   const page = await context.newPage(), url = `chrome-extension://${new URL(worker.url()).host}/library.html`;
@@ -30,7 +30,7 @@ try {
   assert.equal(await page.locator('.app-update-banner').count(), 0); assert.equal(calls, 1);
   await page.getByRole('button', { name: '设置', exact: true }).click();
   const card = page.locator('.app-update-card');
-  version = `${major}.${minor + 2}.0-beta.1`;
+  version = `${major}.${minor + 2}.0`;
   await card.getByRole('button', { name: '检查更新', exact: true }).click();
   await card.getByText(version, { exact: true }).waitFor(); assert.equal(calls, 2);
   await card.getByText('更新说明', { exact: true }).click();

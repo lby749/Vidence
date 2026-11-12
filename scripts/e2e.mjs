@@ -19,7 +19,7 @@ import path from 'node:path';
 import { chromium } from 'playwright';
 
 const ROOT = process.cwd();
-const EXTENSION_PATH = path.join(ROOT, '.output', 'chrome-mv3');
+const EXTENSION_PATH = path.resolve(process.env.VMA_EXTENSION_PATH ?? '.output/chrome-mv3');
 const ARTIFACTS = path.join(ROOT, 'artifacts');
 const PORT = 8123;
 const HARD_SUBTITLES = process.env.E2E_HARD_SUBTITLES === '1';
@@ -194,6 +194,27 @@ async function main() {
     log('页面浮动按钮状态', launcherText);
     assert(launcherText.includes('记录中'), '页面内一键开始记录');
     await page.screenshot({ path: path.join(ARTIFACTS, 'page-launcher.png'), fullPage: false });
+
+    // 验证页面内真实侧栏，而非只在单独标签页渲染。
+    const openDock = async () => {
+      if (!await page.locator('#vma-launcher-host #panel').count()) await page.locator('#vma-launcher-host .pill').click();
+      await page.locator('#vma-launcher-host #panel').click();
+      await page.locator('#vma-dock-host iframe').waitFor();
+    };
+    await openDock();
+    await page.getByRole('button', { name: '关闭学习栏', exact: true }).click();
+    await page.locator('#vma-dock-host').waitFor({ state: 'detached' });
+    await page.locator('#vma-launcher-host .pill').waitFor({ state: 'visible' });
+    await openDock();
+    const dockFrame = page.frameLocator('#vma-dock-host iframe');
+    await dockFrame.getByRole('button', { name: '关闭面板', exact: true }).click();
+    await page.locator('#vma-dock-host').waitFor({ state: 'detached' });
+    await page.waitForTimeout(1400);
+    assert(await page.locator('#vma-dock-host').count() === 0, '关闭后状态刷新不会重新弹出侧栏');
+    await openDock();
+    await page.keyboard.press('Escape');
+    await page.locator('#vma-dock-host').waitFor({ state: 'detached' });
+    assert((await extPage.evaluate(id => chrome.runtime.sendMessage({ type: 'ui:get-state', payload: { tabId: id } }), tabId)).data.recording, '关闭学习栏不会停止用户正在记录的视频');
 
     const start = { ok: true };
     log('开始记录', '通过页面浮动按钮触发');

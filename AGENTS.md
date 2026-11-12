@@ -39,7 +39,7 @@ node scripts/update-ui-check.mjs
 - 图片来自 assets/brand/logo-source.png；用 `python scripts/prepare-brand.py` 生成 PNG/ICO。应用、启动器、扩展和品牌标识统一，操作按钮保留语义。
 - 发布前核对源码、构建文件和随包脚本一致，并验证没有系统 Python/Node 的启动路径。不得把缺少 WebView2 的模拟分支称为新装 Windows 实测。
 - 浏览器插件与原生桌面分别构建、测试和发包。桌面界面/学习侧栏使用 Qt Widgets，不得重新引入 HTML 界面壳或 QtWebEngine；发行包必须检查没有浏览器内核、扩展构建和模型权重。应用内课程网页仅使用系统已有 WebView2；无此组件时仍可播放本地视频、挂靠外部课程窗口。
-- 主分支云端源码、成品运行检查通过后才创建 BETA Release；已有发布不覆盖。发布下一版应提升 package.json 版本及 wxt.config.ts 的显示版本，自动提醒只读取公开版本元数据，不发送学习数据或凭据。
+- 主分支云端源码、成品运行检查通过后才创建 Release；已有发布不覆盖。发布下一版应提升 package.json 版本及 wxt.config.ts 的显示版本，自动提醒只读取公开版本元数据，不发送学习数据或凭据。
 
 ## 尚未完成
 
@@ -50,3 +50,7 @@ Android、TTS、听视频 ASR 尚未实现；iPhone 暂缓。Apple/AMD 实机、
 项目使用 MIT。保留依赖的第三方声明，不将它们错误地重新声明为本项目原创代码。
 
 感谢您的支持，如果有帮助的话，请点一个 [STAR](https://github.com/lby749/Vidence)，谢谢！
+
+## 当前发布范围
+
+按用户最新要求，浏览器插件先独立发布为 0.4.0，移除 BETA 标识。原生桌面版继续单独开发与验收，不在插件发行包中。使用 `.github/workflows/extension-release.yml` 检查并发布插件；原生桌面流水线手动运行，不自动公开未完成的桌面成品。
