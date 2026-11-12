@@ -3,11 +3,10 @@ export * from './locale-text';
 import { cloneElement, createContext, isValidElement, useContext, useEffect, useState, type ReactNode, type ReactElement } from 'react';
 import { liveQuery } from 'dexie';
 import { getDb, getSettings } from '@/db/db';
-import type { NativeBridge } from '@/desktop/runtime';
 
 const LocaleContext = createContext<{ locale: UiLocale; preference: UiLanguage }>({ locale: 'zh-CN', preference: 'zh-CN' });
 export const useUiLocale = () => useContext(LocaleContext);
-export function UiLocaleProvider({ children, native }: { children: ReactNode; native?: NativeBridge }) {
+export function UiLocaleProvider({ children }: { children: ReactNode }) {
   const [preference, setPreference] = useState<UiLanguage>('zh-CN'), [ready, setReady] = useState(false);
   useEffect(() => {
     let alive = true, subscription: { unsubscribe: () => void } | undefined;
@@ -23,8 +22,7 @@ export function UiLocaleProvider({ children, native }: { children: ReactNode; na
     if (!ready) return;
     document.documentElement.lang = locale;
     if (typeof chrome !== 'undefined' && chrome.storage?.local) void chrome.storage.local.set({ vmaUiLanguage: preference }).catch(() => {});
-    if (typeof native?.setUiLanguage === 'function') native.setUiLanguage(locale, () => {});
-  }, [locale, preference, native, ready]);
+  }, [locale, preference, ready]);
   return <LocaleContext.Provider value={{ locale, preference }}>{ready ? children : null}</LocaleContext.Provider>;
 }
 

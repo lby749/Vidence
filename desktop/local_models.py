@@ -10,13 +10,18 @@ import sys
 import threading
 import time
 import urllib.request
+import platform
+import tarfile
+import tempfile
+import zipfile
 
 
 class LocalModels:
     def __init__(self, root, state):
         self.spec = json.loads((root / 'src/models/desktop-embedding.json').read_text('utf8'))
         self.file = state / 'models' / self.spec['name']
-        self.runtime = root / 'desktop/runtime/llama'
+        self.runtime = state / 'runtime/llama'
+        self.runtime_spec = json.loads((root / 'src/models/native-runtime.json').read_text('utf8'))
         self.process = None
         self.origin = None
         self.backend = None
@@ -39,9 +44,11 @@ class LocalModels:
             if self.installed():
                 try:
                     self.verify()
+                except ValueError: self.verified = False
+                else:
+                    self.download_runtime(progress)
                     progress(self.spec['bytes'], self.spec['bytes'])
                     return
-                except ValueError: self.verified = False
             self.file.parent.mkdir(parents=True, exist_ok=True)
             partial = self.file.with_suffix('.partial')
             digest = hashlib.sha256()
@@ -57,6 +64,41 @@ class LocalModels:
                 raise ValueError('下载校验失败，请重新下载')
             partial.replace(self.file)
             self.verified = True
+            self.download_runtime(progress)
+
+    def download_runtime(self, progress):
+        system=platform.system().lower(); machine='arm64' if platform.machine().lower() in ('arm64','aarch64') else 'x86_64'
+        backends=['cpu','vulkan'] if system=='windows' else ['metal'] if system=='darwin' else []
+        if not backends: raise ValueError('当前系统的原生离线计算包尚未提供')
+        for backend in backends:
+            spec=self.runtime_spec['platforms'].get(f'{system}-{machine}-{backend}')
+            if not spec: raise ValueError('当前硬件的离线计算包尚未提供')
+            destination=self.runtime/backend
+            marker=destination/'verified-archive.sha256'
+            executable_name='llama-server.exe' if system=='windows' else 'llama-server'
+            if marker.is_file() and marker.read_text()==spec['digest'] and (destination/executable_name).is_file():continue
+            self.runtime.mkdir(parents=True,exist_ok=True)
+            with tempfile.TemporaryDirectory(prefix='install-',dir=self.runtime) as directory:
+                temporary=Path(directory); archive=temporary/spec['name']; digest=hashlib.sha256(); loaded=0
+                with urllib.request.urlopen(spec['url'],timeout=30) as response,archive.open('wb') as file:
+                    while chunk:=response.read(512*1024):
+                        loaded+=len(chunk)
+                        if loaded>spec['bytes']:raise ValueError('计算组件大小异常')
+                        digest.update(chunk); file.write(chunk); progress(loaded,spec['bytes'])
+                if loaded!=spec['bytes'] or 'sha256:'+digest.hexdigest()!=spec['digest']:raise ValueError('计算组件校验失败')
+                extracted=temporary/'files'; extracted.mkdir()
+                if archive.suffix=='.zip':
+                    with zipfile.ZipFile(archive) as bundle:
+                        if any(not (extracted/item.filename).resolve().is_relative_to(extracted.resolve()) for item in bundle.infolist()):raise ValueError('计算组件路径无效')
+                        bundle.extractall(extracted)
+                else:
+                    with tarfile.open(archive) as bundle:bundle.extractall(extracted,filter='data')
+                executable=next(extracted.rglob('llama-server.exe' if system=='windows' else 'llama-server'))
+                import shutil
+                destination.mkdir(parents=True,exist_ok=True)
+                for file in executable.parent.iterdir():
+                    if file.is_file():shutil.copy2(file,destination/file.name)
+                marker.write_text(spec['digest'])
 
     def verify(self):
         if self.verified: return
@@ -90,6 +132,7 @@ class LocalModels:
             errors = []
             for backend in backends:
                 executable = self.runtime / backend / ('llama-server.exe' if os.name == 'nt' else 'llama-server')
+                if backend=='cpu' and sys.platform=='darwin' and not executable.exists():executable=self.runtime/'metal/llama-server'
                 if not executable.exists(): continue
                 device = None
                 if backend != 'cpu':

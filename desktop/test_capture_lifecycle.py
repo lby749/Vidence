@@ -13,7 +13,7 @@ class CaptureChecks(unittest.TestCase):
         frames = [Mock() for _ in range(60)]
         for index, frame in enumerate(frames):
             frame.isValid.return_value = True; frame.startTime.return_value = index * 16667
-        with patch('app.QVideoFrame', side_effect=lambda frame: frame):
+        with patch('native_media.QVideoFrame', side_effect=lambda frame: frame):
             for frame in frames: NativeBridge.accept_frame(owner, frame)
         self.assertIs(owner.latest_frame, frames[-1])
         for frame in frames: frame.toImage.assert_not_called()
@@ -42,7 +42,7 @@ class CaptureChecks(unittest.TestCase):
         capture = Mock(); capture.isActive.return_value = True
         owner = SimpleNamespace(web_window=web, capture=capture, captured_web_handle=17, mode='window', player=Mock(), web_attach_pending=False)
         candidate = Mock(); candidate.description.return_value = 'owned'
-        with patch('app.QWindowCapture.capturableWindows', return_value=[candidate]):
+        with patch('native_media.QWindowCapture.capturableWindows', return_value=[candidate]):
             for _ in range(3): NativeBridge.capture_web(owner)
         capture.stop.assert_not_called(); capture.start.assert_not_called()
         self.assertFalse(owner.player.pause.called)

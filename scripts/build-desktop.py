@@ -1,6 +1,7 @@
 """打包可直接启动的 Windows 应用；只复制明确列出的代码和运行时。"""
 from pathlib import Path
 import json
+import hashlib
 import os
 import shutil
 import subprocess
@@ -9,18 +10,19 @@ import pefile
 from PySide6.QtCore import QLibraryInfo
 
 root = Path(__file__).resolve().parents[1]
+inputs=[*sorted((root/'desktop').glob('*.py')),root/'package.json',root/'src/models/desktop-embedding.json',root/'src/models/native-runtime.json',*sorted((root/'src/ui/locales').glob('*.json'))]
+def source_hashes():return {str(file.relative_to(root)).replace('\\','/'):hashlib.sha256(file.read_bytes()).hexdigest() for file in inputs}
+before=source_hashes()
 destination = root / sys.argv[1] if len(sys.argv) > 1 else root / 'dist/desktop-player'
 assert root in destination.resolve().parents
 assert not destination.exists(), '输出目录已存在；请指定一个新的 dist 子目录，避免覆盖运行中的版本'
 output = destination / 'Vidence'
 assert root in output.resolve().parents
-assets = root / '.output/chrome-mv3'
-assert (assets / 'desktop.html').exists(), '请先运行 npm run build'
-assert not any(file.suffix.lower() in ('.onnx', '.tar', '.gguf', '.safetensors') for file in assets.rglob('*')), '发布目录不得包含模型权重'
 node = Path(shutil.which('node') or '')
 assert node.is_file(), '没有找到 Node 运行时'
-assert (root / 'desktop/runtime/llama/cpu').is_dir(), '请先运行 python scripts/prepare-native-runtime.py'
-command = [sys.executable, '-m', 'PyInstaller', '--noconfirm', '--onedir', '--windowed', '--name', 'Vidence', '--icon', str(root / 'public/brand/app.ico'), '--distpath', str(destination), '--workpath', str(root / '.desktop-build/pyinstaller'), '--specpath', str(root / 'desktop'), '--add-data', f'{assets}{os.pathsep}.output/chrome-mv3', '--add-binary', f'{node}{os.pathsep}runtime', '--add-data', f'{root / "desktop/runtime/llama"}{os.pathsep}desktop/runtime/llama', '--add-data', f'{root / "src/models/desktop-embedding.json"}{os.pathsep}src/models']
+command = [sys.executable, '-m', 'PyInstaller', '--noconfirm', '--onedir', '--windowed', '--name', 'Vidence', '--icon', str(root / 'public/brand/app.ico'), '--distpath', str(destination), '--workpath', str(root / '.desktop-build/pyinstaller-native'), '--specpath', str(root / 'desktop'), '--add-data', f'{root / "public/brand"}{os.pathsep}public/brand', '--add-binary', f'{node}{os.pathsep}runtime', '--add-data', f'{root / "src/models/desktop-embedding.json"}{os.pathsep}src/models', '--add-data', f'{root / "src/models/native-runtime.json"}{os.pathsep}src/models', '--add-data', f'{root / "package.json"}{os.pathsep}.', '--add-data', f'{root / "src/ui/locales"}{os.pathsep}src/ui/locales', '--collect-submodules', 'winrt']
+for module in ('QtWebEngineCore', 'QtWebEngineWidgets', 'QtWebEngineQuick', 'QtQml', 'QtQuick', 'QtQuickWidgets', 'Qt3DCore', 'QtNetworkAuth'):
+    command += ['--exclude-module', 'PySide6.'+module]
 # QWebView 是 Qt 6.11 新增 Python 绑定，旧 PyInstaller 没有专用 hook。
 plugin = Path(QLibraryInfo.path(QLibraryInfo.LibraryPath.PluginsPath)) / 'webview'
 for file in plugin.glob('*webview2*' if os.name == 'nt' else '*darwin*'):
@@ -52,8 +54,12 @@ if icu.exists():
         unused_data = output / '_internal/icudt78.dll'
         if unused_data.exists(): unused_data.unlink()
 assert not any(file.suffix.lower() in ('.onnx', '.tar', '.gguf', '.safetensors') for file in output.rglob('*'))
+assert not any('webengine' in file.name.lower() or 'devtools_resources' in file.name.lower() for file in output.rglob('*') if file.is_file()), '桌面包中残留浏览器内核'
+assert not (output / '_internal/.output').exists(), '桌面包不应捆绑浏览器扩展'
 subprocess.run([sys.executable, str(root / 'scripts/build-launcher.py'), str(output)], cwd=root, check=True)
 subprocess.run([sys.executable, str(root / 'scripts/prepare-notices.py'), str(output)], cwd=root, check=True)
+assert source_hashes()==before,'构建期间源码发生变化，本包不能用于最终验收或发布'
+(output/'_internal/build-info.json').write_text(json.dumps({'version':json.loads((root/'package.json').read_text(encoding='utf8'))['version'],'sourceHashes':before},indent=2),encoding='utf8')
 report = {'output': str(output), 'bytes': sum(file.stat().st_size for file in output.rglob('*') if file.is_file()), 'bundledModelWeights': 0}
 (root / 'artifacts/desktop-package.json').write_text(json.dumps(report, ensure_ascii=False, indent=2), encoding='utf-8')
 print(json.dumps(report, ensure_ascii=True))

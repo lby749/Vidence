@@ -28,7 +28,7 @@ Vidence 的项目源码以 MIT 发布。本页列出它使用的第三方程序�
 
 ## 独立应用运行时
 
-独立应用使用已安装 PySide6 6.11.2 / Qt 组件（包元数据：LGPL-3.0-only OR GPL-2.0-only OR GPL-3.0-only）、Python、Node.js 及 js-yaml。打包保留动态库与组件来源说明，构建脚本在 scripts/build-desktop.py；第三方程序运行时不等于模型权重。源码修改可在 desktop/app.py 与 src/entrypoints/desktop 中查看和重新构建。
+独立应用使用已安装 PySide6 6.11.2 / Qt 组件（包元数据：LGPL-3.0-only OR GPL-2.0-only OR GPL-3.0-only）、Python、Node.js 及 js-yaml。打包保留动态库与组件来源说明，构建脚本在 scripts/build-desktop.py；第三方程序运行时不等于模型权重。源码修改可在 desktop/app.py、desktop/native_ui.py 与 desktop/native_media.py 中查看和重新构建。
 
 构建会用scripts/prepare-notices.py将已安装npm依赖、Python和PySide元数据中的原始声明保留到_internal/notices；Node声明按实际随包版本获取，另保留Qt的LGPL/GPL原文。保留这些依赖的原许可证，不将它们重新声明为项目MIT代码。
 
@@ -59,3 +59,5 @@ Vidence 的项目源码以 MIT 发布。本页列出它使用的第三方程序�
 - 未上架商店时，浏览器首次安装需用户确认。流程依据[Edge侧载指南](https://learn.microsoft.com/en-us/microsoft-edge/extensions/getting-started/extension-sideloading)及[Chrome安装分发文档](https://developer.chrome.com/docs/extensions/how-to/distribute/install-extensions)，不使用企业强制安装策略。固定插件目录ID计算参考[Chromium id_util.cc](https://chromium.googlesource.com/chromium/src/+/refs/heads/main/components/crx_file/id_util.cc)。
 
 感谢您的支持，如果有帮助的话，请点一个 [STAR](https://github.com/lby749/Vidence)，谢谢！
+
+原生桌面通过 PyWinRT（winrt-*，MIT）调用系统已有 Windows OCR，不捆绑 OCR 模型或浏览器内核。PyWinRT 的原始许可证随运行包保留。离线 llama.cpp 运行时（MIT）按需下载，下载目录保留上游自带声明；它不再进入桌面发行包。

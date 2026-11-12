@@ -1,5 +1,5 @@
 """随发行包保留依赖原始声明；不改变依赖许可证。"""
-from importlib.metadata import distribution
+from importlib.metadata import distribution, distributions
 from pathlib import Path
 import shutil
 import subprocess
@@ -17,7 +17,7 @@ for file in (root / 'node_modules').rglob('*'):
     if file.is_file() and file.name.lower().startswith(('license', 'notice', 'copyright')) and file.suffix.lower() in ('', '.txt', '.md'):
         target = notices / 'npm' / file.relative_to(root / 'node_modules')
         target.parent.mkdir(parents=True, exist_ok=True); shutil.copy2(file, target)
-for name in ['PySide6', 'PySide6_Essentials', 'PySide6_Addons', 'shiboken6']:
+for name in ['PySide6', 'PySide6_Essentials', 'PySide6_Addons', 'shiboken6', *[item.metadata['Name'] for item in distributions() if item.metadata['Name'].lower().startswith('winrt')]]:
     package = distribution(name)
     for file in package.files:
         if 'licenses/' in str(file).replace('\\', '/'):

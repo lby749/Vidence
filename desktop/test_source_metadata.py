@@ -32,7 +32,7 @@ class SourceMetadataChecks(unittest.TestCase):
     def test_next_video_does_not_overwrite_previous_video_address(self):
         original = 'https://www.youtube.com/watch?v=first'
         owner = SimpleNamespace(web_entry='first-alias', web_sources={'first-alias':{'address':original,'browser':'in-app'}}, current_source={'url':'vma-web://lesson/first-alias'}, capture=Mock(), capture_web=Mock(), notify=Mock())
-        with TemporaryDirectory() as folder, patch('app.STATE', Path(folder)), patch('app.QTimer.singleShot'):
+        with TemporaryDirectory() as folder, patch('native_media.STATE', Path(folder)), patch('native_media.QTimer.singleShot'):
             NativeBridge.web_navigated(owner, 'https://www.youtube.com/watch?v=second')
         self.assertEqual(owner.web_sources['first-alias']['address'], original)
         self.assertNotEqual(owner.web_entry, 'first-alias')

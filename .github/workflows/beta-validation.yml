@@ -1,7 +1,7 @@
 name: BETA clean checkout and portable Windows
 on:
   push:
-    branches: [main]
+    branches: [main, codex/native-desktop-split]
   workflow_dispatch:
 permissions:
   contents: read
@@ -25,7 +25,7 @@ jobs:
       - run: npm run build
       - run: npx playwright install --with-deps chromium
       - run: npm run e2e
-      - run: node scripts/sidebar-layout-check.mjs
+      - run: python scripts/package-extension.py dist/Vidence-Browser-Extension.zip
       - run: node scripts/update-ui-check.mjs
       - run: node scripts/bridge-check.mjs
       - uses: actions/upload-artifact@v7
@@ -54,17 +54,15 @@ jobs:
       - run: npm test
       - run: npm run build
       - run: python -m unittest discover -s desktop -p "test_*.py"
-      - run: node scripts/sidebar-layout-check.mjs
+      - run: python scripts/native-ui-check.py
       - run: node scripts/settings-ui.mjs
       - run: node scripts/update-ui-check.mjs
       - run: choco install ffmpeg --yes --no-progress
       - run: python scripts/frame-detail-check.py
       - run: python scripts/playback-matrix.py
-      - run: ffmpeg -hide_banner -loglevel error -f lavfi -i testsrc2=size=1920x1080:rate=15 -t 110 -c:v libx264 -preset ultrafast -crf 30 -pix_fmt yuv420p artifacts/cloud-fixture.mp4
-      - run: node scripts/desktop-keyframes-check.mjs --no-ocr
-        env:
-          E2E_VIDEO: artifacts/cloud-fixture.mp4
-      - run: python scripts/prepare-native-runtime.py
+      - run: ffmpeg -hide_banner -loglevel error -f lavfi -i color=c=0x191f35:s=1280x720:r=30 -t 20 -c:v libx264 -preset ultrafast -pix_fmt yuv420p artifacts/sidebar-test.mp4
+      - run: python scripts/player-controls-check.py --offscreen
+      - run: python scripts/package-extension.py dist/Vidence-Browser-Extension.zip
       - run: python scripts/build-desktop.py dist/cloud-beta
       - uses: actions/upload-artifact@v7
         with:
@@ -77,6 +75,12 @@ jobs:
           path: dist/cloud-beta/
           include-hidden-files: true
           retention-days: 14
+      - uses: actions/upload-artifact@v7
+        with:
+          name: browser-extension-beta
+          path: |
+            dist/Vidence-Browser-Extension.zip
+            dist/Vidence-Browser-Extension.zip.sha256
       - uses: actions/upload-artifact@v7
         if: always()
         with:
@@ -106,6 +110,7 @@ jobs:
           name: windows-runtime-evidence
           path: artifacts/cloud-runtime.json
   release:
+    if: github.ref == 'refs/heads/main'
     needs: [source, windows-runtime]
     runs-on: ubuntu-latest
     permissions:
@@ -118,13 +123,17 @@ jobs:
         with:
           name: windows-portable-beta
           path: portable
+      - uses: actions/download-artifact@v7
+        with:
+          name: browser-extension-beta
+          path: release
       - name: Package the validated files
         run: |
           python - <<'PY'
           from pathlib import Path
           import hashlib, zipfile
-          root = Path('portable'); output = Path('release/Vidence-Windows-x64.zip')
-          output.parent.mkdir()
+          root = Path('portable'); output = Path('release/Vidence-Desktop-Windows-x64.zip')
+          output.parent.mkdir(exist_ok=True)
           with zipfile.ZipFile(output, 'w', zipfile.ZIP_DEFLATED, compresslevel=6) as bundle:
               for file in root.rglob('*'):
                   if file.is_file(): bundle.write(file, file.relative_to(root))
@@ -140,4 +149,4 @@ jobs:
             echo 'This version already exists; its release and assets stay unchanged.'
             exit 0
           fi
-          gh release create "$tag" release/Vidence-Windows-x64.zip release/Vidence-Windows-x64.zip.sha256 --target "$GITHUB_SHA" --prerelease --title "Vidence $tag · BETA" --notes-file docs/release-notes.md
+          gh release create "$tag" release/Vidence-Desktop-Windows-x64.zip release/Vidence-Desktop-Windows-x64.zip.sha256 release/Vidence-Browser-Extension.zip release/Vidence-Browser-Extension.zip.sha256 --target "$GITHUB_SHA" --prerelease --title "Vidence $tag · BETA" --notes-file docs/release-notes.md

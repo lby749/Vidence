@@ -19,7 +19,8 @@ try {
     if (-not $launcher.WaitForExit(60000)) { $launcher.Kill(); throw 'Frozen launcher timed out' }
     if ($launcher.ExitCode -ne 0) { throw 'Frozen launcher self-check failed' }
     $report = Get-Content -LiteralPath $reportPath -Raw | ConvertFrom-Json
-    if (-not ($report.passed -and $report.frozen -and $report.nativePlaybackAndWebBindingsImported)) { throw 'Frozen bindings were not verified' }
+    if (-not ($report.passed -and $report.frozen -and $report.nativeWidgetsImported -and $report.nativeSidebarConstructed -and $report.systemOcr.passed)) { throw 'Frozen native runtime was not verified' }
+    if ($report.bundledBrowserKernel -or $report.extensionBundled) { throw 'Desktop package contains browser or extension resources' }
     if ($Media -and -not $report.videoPlayback.passed) { throw 'Frozen video playback was not verified' }
     & (Join-Path $packagePath '_internal/runtime/node.exe') (Join-Path $workspacePath 'scripts/packaged-bridge-check.mjs') (Join-Path $packagePath '_internal')
     if ($LASTEXITCODE -ne 0) { throw 'Bundled bridge failed' }

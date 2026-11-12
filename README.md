@@ -8,9 +8,16 @@ Vidence 是一款 AI 视频学习助手。看网课、教程或本地视频时�
 
 ## 下载与使用
 
-**[下载 Windows 版 · BETA 测试版](https://github.com/lby749/Vidence/releases/download/v0.1.0-beta.3/Vidence-Windows-x64.zip)** · [查看全部版本](https://github.com/lby749/Vidence/releases)
+**[打开下载与版本页面](https://github.com/lby749/Vidence/releases)**
 
-下载后完整解压，打开文件夹里的 **“一键启动.exe”** 即可。无需安装开发工具；浏览器插件也从启动器安装。
+本分支正在验收独立的原生桌面版与浏览器插件，尚未发布新版本；已发布的 BETA.3 仍是旧打包方式。新版本会分别提供：
+
+| 你想怎样使用 | 选择下载 |
+| --- | --- |
+| 播放本地视频，或给网课窗口配学习栏 | `Vidence-Desktop-Windows-x64.zip`，完整解压后打开“一键启动.exe” |
+| 直接在 Chrome / Edge 中学习 | `Vidence-Browser-Extension.zip`，解压后运行“安装到浏览器.cmd” |
+
+两者可以独立使用。桌面界面和侧栏是原生控件，不附带 Chromium / QtWebEngine；插件直接使用已安装的浏览器。模型与离线计算组件按需下载。
 
 <p align="center"><img src="assets/brand/project-cover.png" width="360" alt="项目配图：连接知识的星空"/></p>
 
@@ -28,13 +35,13 @@ Vidence 是一款 AI 视频学习助手。看网课、教程或本地视频时�
 
 目前提供 **Windows 应用**和 **Chrome / Edge 浏览器扩展**，支持本地 MP4、网页视频与网课窗口。
 
-1. 点击[下载 Windows 版](https://github.com/lby749/Vidence/releases/download/v0.1.0-beta.3/Vidence-Windows-x64.zip)，完整解压后打开“一键启动.exe”。
+1. 到[下载页面](https://github.com/lby749/Vidence/releases)选择桌面版或浏览器插件，按包内说明打开。
 2. 打开本地视频，或选择课程网址、正在上课的窗口。
 3. 在右侧学习栏开始记录、提问，结束后到视频库继续整理和复习。
 
-使用 AI 功能前，在设置中连接你自己的 AI 服务。离线功能可以按需要下载。浏览器扩展也可以从启动器进入安装向导。
+使用 AI 功能前，在设置中连接你自己的 AI 服务。离线功能可以按需要下载。浏览器插件单独下载，Windows 包内提供安装引导；浏览器要求用户亲自确认加载扩展。
 
-旧 BETA.1 / BETA.2 用户需要从下载页面手动安装一次新版，已有本机学习数据保留。
+旧版本的浏览器学习库保留在原位置。原生桌面使用独立的 SQLite 数据库，可导入旧版导出的资料；这不等于已实现自动迁移所有旧聊天。
 
 ## 反馈与建议
 
