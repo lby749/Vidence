@@ -38,6 +38,8 @@ node scripts/update-ui-check.mjs
 - 真实模型测试为 `scripts/knowledge-qa-check.mjs` 和 `scripts/knowledge-frame-review.mjs`，需要用户配置的 OpenCode Go/DSH。它们消耗模型额度，不能在普通单元检查中自动运行。
 - 本机媒体验收报告保存在被忽略的 artifacts/。没有原媒体时不得用模拟截图冒充真实视频验收。
 - 真实窗口、无界面 UI、测试桥接、单元测试、发行包搬移检查属于不同证据层，必须区分。
+- 原生完整流程由 `.github/workflows/desktop-release.yml` 在另一台 Windows runner 对最终 ZIP 执行 `scripts/windows-journey-check.ps1`：真实模型、两视频记录/OCR/记忆/聊天/检索、选择性导出导入、原图/禁图/换图、第二进程恢复。必须核对 record 与 restart 报告均通过；临时测试权重不随包分发，生成教学片不能称为真实平台课程。普通单元检查不自动下载此测试模型。
+- 初始原图目录只能从本次授权、videoId、时间及 ID 白名单均合格的 NativeTools 快照生成，不得附像素。摘要未描述图片不能证明没有原图；画面问答仍须真正取图并保留引用。
 - 图片来自 assets/brand/logo-source.png；用 `python scripts/prepare-brand.py` 生成 PNG/ICO。应用、启动器、扩展和品牌标识统一，操作按钮保留语义。
 - 发布前核对源码、构建文件和随包脚本一致，并验证没有系统 Python/Node 的启动路径。不得把缺少 WebView2 的模拟分支称为新装 Windows 实测。
 - 浏览器插件与原生桌面分别构建、测试和发包。桌面界面/学习侧栏使用 Qt Widgets，不得重新引入 HTML 界面壳或 QtWebEngine；发行包必须检查没有浏览器内核、扩展构建和模型权重。应用内课程网页仅使用系统已有 WebView2；无此组件时仍可播放本地视频、挂靠外部课程窗口。
@@ -55,6 +57,8 @@ Android、TTS、听视频 ASR 尚未实现；iPhone 暂缓。Apple/AMD 实机、
 
 ## 当前发布范围
 
-按用户最新要求，浏览器插件当前独立版本为 0.4.1，移除 BETA 标识。原生桌面版继续单独开发与验收，不在插件发行包中。使用 `.github/workflows/extension-release.yml` 检查并发布插件；原生桌面流水线手动运行，不自动公开未完成的桌面成品。
+原生桌面当前为[0.4.4独立发行](https://github.com/lby749/Vidence/releases/tag/desktop-v0.4.4)，完整云端流程依据为[运行43197348491](https://github.com/lby749/Vidence/actions/runs/43197348491)。范围与未覆盖项以docs/verification.md为准，不把生成教学片、受限PATH或无界面控件测试写成真实平台、物理空白Windows或全部硬件验收。
+
+按用户最新要求，浏览器插件当前独立版本为 0.4.1，移除 BETA 标识。原生桌面使用独立的 desktop-v 版本，不在插件发行包中。插件由 `.github/workflows/extension-release.yml` 检查和发布；桌面由 `.github/workflows/desktop-release.yml` 在相关源码变更或手动运行时验收，仅在 build 与 runtime 全部通过后创建独立 Release，不公开未通过的桌面成品。
 
 - 独立插件ZIP根目录为manifest.json，不放EXE/CMD/PowerShell；Windows图形安装引导由installer/BrowserExtensionSetup.cs与系统.NET Framework构建，内嵌同一个已验收ZIP。使用build-extension-installer.py与extension-exe-check.py验证；不捆绑浏览器或Python/Node，不以企业策略或浏览器配置写入绕过首次确认。
