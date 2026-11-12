@@ -1,9 +1,4 @@
 @echo off
 chcp 65001 >nul
-cd /d "%~dp0"
-if not exist "%~dp0dist\desktop-player\Vidence\一键启动.exe" (
-  echo 请先完整解压发布包，再运行其中的一键启动.exe。
-  pause
-  exit /b 1
-)
-start "" "%~dp0dist\desktop-player\Vidence\一键启动.exe" --open
+echo 原生桌面已独立发包。请下载 Vidence-Desktop-Windows-x64.zip，完整解压后打开其中的一键启动.exe。
+start "" "https://github.com/lby749/Vidence/releases"

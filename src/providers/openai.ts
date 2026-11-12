@@ -17,7 +17,6 @@ import {
   type ProviderRequest,
 } from './types';
 import { parseSse, readErrorBody } from './sse';
-import { providerFetch } from '@/desktop/local-models';
 
 export interface OpenAIAdapterOptions {
   id: string;
@@ -110,7 +109,7 @@ export class OpenAICompatibleAdapter implements ProviderAdapter {
   async *chat(request: ProviderRequest): AsyncGenerator<ProviderEvent, void, unknown> {
     let response: Response;
     try {
-      response = await providerFetch(joinUrl(this.baseUrl, '/chat/completions'), {
+      response = await fetch(joinUrl(this.baseUrl, '/chat/completions'), {
         method: 'POST',
         headers: {
           'content-type': 'application/json',
@@ -230,7 +229,7 @@ export async function openAIJson(
 ): Promise<{ content: string; usage: { inputTokens: number; outputTokens: number }; status: number }> {
   let response: Response;
   try {
-    response = await providerFetch(joinUrl(options.baseUrl || 'https://api.openai.com/v1', '/chat/completions'), {
+    response = await fetch(joinUrl(options.baseUrl || 'https://api.openai.com/v1', '/chat/completions'), {
       method: 'POST',
       headers: {
         'content-type': 'application/json',

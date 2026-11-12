@@ -7,8 +7,6 @@
  */
 
 /** 推理资源的逻辑路径；实际读取经校验的用户下载缓存。 */
-import desktopEmbedding from './desktop-embedding.json';
-import { hasDesktopModels } from '@/desktop/local-models';
 export const LOCAL_MODEL_PATH = 'models/';
 export const RERANK_MODEL_ID = 'Xenova/bge-reranker-base';
 export const EMBEDDING_MODEL_ID = 'Xenova/bge-small-zh-v1.5';
@@ -50,5 +48,5 @@ export const EMBEDDING_SPEC = {
 } as const;
 
 export function embeddingSpec() {
-  return hasDesktopModels() ? { ...EMBEDDING_SPEC, modelId: desktopEmbedding.modelId, dimension: desktopEmbedding.dimension, pooling: 'mean' as const, dtype: 'Q4_K_M', queryInstruction: desktopEmbedding.queryInstruction, documentInstruction: desktopEmbedding.documentInstruction } : { ...EMBEDDING_SPEC, documentInstruction: '' };
+  return { ...EMBEDDING_SPEC, documentInstruction: '' };
 }

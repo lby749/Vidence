@@ -8,8 +8,6 @@
 import { getDb, getSettings } from '@/db/db';
 import type { MemoryNode, VectorRecord } from '@/shared/types';
 import { embeddingSpec, APPROX_MODEL_FILES } from '@/models/model-info';
-import desktopEmbedding from '@/models/desktop-embedding.json';
-import { hasDesktopModels, desktopModelRequest } from '@/desktop/local-models';
 import { offscreenRequest } from './ocr-service';
 import { markIndexDirty } from './index-service';
 import { chunkText } from '@/retrieval/chunk';
@@ -25,8 +23,7 @@ export async function embedTexts(texts: string[], query = false): Promise<Float3
   if (texts.length === 0) return [];
   const spec = embeddingSpec();
   const prepared = texts.map(text => `${query ? spec.queryInstruction : spec.documentInstruction}${text}`);
-  if (hasDesktopModels() && !(await getSettings()).retrieval.vector) throw new Error('当前占用档位未启用按意思查找');
-  const result = hasDesktopModels() ? await desktopModelRequest<{ vectors: number[][]; dim: number }>('embed', { texts: prepared }) : await offscreenRequest<{ vectors: number[][]; dim: number }>(
+  const result = await offscreenRequest<{ vectors: number[][]; dim: number }>(
     { type: 'embed:encode', modelId: spec.modelId, texts: prepared },
     180_000,
   );
@@ -89,7 +86,7 @@ export async function embedPendingNodes(limit = 10): Promise<{ embedded: number;
         kind: 'vector',
         version: 1,
         modelId: MODEL_ID,
-        modelFiles: hasDesktopModels() ? [{ name: desktopEmbedding.name }] : APPROX_MODEL_FILES.embedding.map((file) => ({ name: file.name })),
+        modelFiles: APPROX_MODEL_FILES.embedding.map((file) => ({ name: file.name })),
         dimension: spec.dimension,
         quantized: true,
         pooling: spec.pooling,
@@ -110,8 +107,7 @@ export async function embedPendingNodes(limit = 10): Promise<{ embedded: number;
 
 export async function warmupEmbedding(): Promise<{ ok: boolean; error?: string }> {
   try {
-    if (hasDesktopModels()) await embedTexts(['准备语义检索']);
-    else await offscreenRequest({ type: 'embed:warmup', modelId: embeddingSpec().modelId }, 180_000);
+    await offscreenRequest({ type: 'embed:warmup', modelId: embeddingSpec().modelId }, 180_000);
     lastError = null;
     return { ok: true };
   } catch (error) {

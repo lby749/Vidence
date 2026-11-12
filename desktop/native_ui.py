@@ -1,6 +1,7 @@
 """Qt Widgets学习侧栏；不使用HTML页面、JavaScript或浏览器控件承载界面。"""
 import base64
 import json
+import re
 from pathlib import Path
 import threading
 import time
@@ -71,7 +72,7 @@ class NativeSidebar(QWidget):
     def __init__(self, window, bridge, store, models):
         super().__init__(); self.setObjectName('sidebar')
         self.window, self.bridge, self.store, self.models = window, bridge, store, models
-        self.video_id = None; self.jobs = []; self.ai_job = None; self.token = ''
+        self.video_id = None; self.jobs = []; self.ai_job = None; self.token = ''; self.bootstrapping=False
         self.recorder = Recorder(bridge, store)
         self.recorder.changed.connect(self.record_changed); self.recorder.problem.connect(self.set_status)
         self.recorder.ocr_requested.connect(self.ocr)
@@ -122,7 +123,24 @@ class NativeSidebar(QWidget):
 
     def bootstrap(self):
         # 仅建立本机配对；不读取或显示智能体的登录凭据。
-        self.start_job(lambda job: json.loads(self.bridge.bootstrap()), lambda value: setattr(self, 'token', value['token']))
+        if self.route.currentData()!='local-agent' or self.bootstrapping:return
+        self.bootstrapping=True
+        def connect(job):
+            saved=self.store.setting('bridgeToken','')
+            if saved:
+                try:NativeAgent(self.store,saved,cancel=job.cancel).bridge('/health'); return {'token':saved}
+                except Exception:
+                    if job.cancel.is_set():raise
+            return json.loads(self.bridge.bootstrap())
+        def done(value):
+            self.bootstrapping=False
+            if self.route.currentData()!='local-agent':return
+            if value.get('error'):
+                self.set_status(value['error'])
+                if value.get('existingBridge'):self.existing_panel.show()
+            else:self.token=value['token']
+        job=self.start_job(connect,done)
+        job.failed.connect(lambda error:setattr(self,'bootstrapping',False))
 
     def display_text(self,control,text):
         translated=ui_text(text,self.store.setting('uiLanguage','zh-CN')); control.setProperty('uiOriginal',text); control.setProperty('uiTranslated',translated); control.setText(translated)
@@ -399,6 +417,11 @@ class NativeSidebar(QWidget):
         self.protocol=QComboBox(); self.protocol.addItem('OpenAI compatible','openai'); self.protocol.addItem('Anthropic','anthropic'); form.addRow('服务商',self.api_service); form.addRow('API 协议',self.protocol)
         for label,control in [('连接方式',self.route),('智能体',self.backend),('API 地址',self.base_url),('API Key',self.api_key),('使用模型',self.model)]:form.addRow(label,control)
         self.settings_form=form; layout.addLayout(form); layout.addWidget(button('连接并获取可用模型',self.discover,True))
+        self.existing_toggle=button('连接已有服务',lambda:self.existing_panel.setVisible(not self.existing_panel.isVisible())); layout.addWidget(self.existing_toggle)
+        self.existing_panel=QWidget(); existing=QVBoxLayout(self.existing_panel); existing.setContentsMargins(0,0,0,0)
+        explanation=QLabel('已经启动过本机智能体？可使用它生成的连接令牌。这里不填写 API Key。'); explanation.setWordWrap(True); existing.addWidget(explanation)
+        self.bridge_token=QLineEdit(self.store.setting('bridgeToken','')); self.bridge_token.setEchoMode(QLineEdit.EchoMode.Password); self.bridge_token.setPlaceholderText('已有服务的连接令牌'); existing.addWidget(self.bridge_token)
+        row=QHBoxLayout(); row.addWidget(button('选择配对文件',self.choose_pairing_file)); row.addWidget(button('连接',self.connect_existing)); existing.addLayout(row); self.existing_panel.hide(); layout.addWidget(self.existing_panel)
         self.vision=QCheckBox('允许 AI 读取画面'); self.vision.setToolTip('每次提问仍需勾选，不会自动上传保存的截图。'); layout.addWidget(self.vision)
         self.ocr_enabled=QCheckBox('识别视频里的文字'); self.ocr_enabled.setToolTip('在本机使用系统文字识别，不发送截图。'); layout.addWidget(self.ocr_enabled)
         self.resource_tier=QComboBox()
@@ -426,6 +449,26 @@ class NativeSidebar(QWidget):
         api=self.route.currentData()=='api'
         for control in (self.base_url,self.api_key,self.api_service,self.protocol):self.settings_form.setRowVisible(control,api)
         self.settings_form.setRowVisible(self.backend,not api)
+        self.existing_toggle.setVisible(not api)
+        if api:self.existing_panel.hide()
+        elif not self.token:QTimer.singleShot(0,self.bootstrap)
+
+    def choose_pairing_file(self):
+        file,_=QFileDialog.getOpenFileName(self,'选择已有服务的配对文件','','Pairing token (token *.token);;All files (*)')
+        if not file:return
+        try:
+            if Path(file).stat().st_size>256:raise ValueError()
+            value=Path(file).read_text(encoding='utf-8-sig').strip()
+            if not re.fullmatch(r'[0-9a-fA-F]{64}',value):raise ValueError()
+            self.bridge_token.setText(value); self.connect_existing()
+        except Exception:self.set_status('这个文件不是有效的 Vidence 配对文件。')
+
+    def connect_existing(self):
+        token=self.bridge_token.text().strip()
+        if not re.fullmatch(r'[0-9a-fA-F]{64}',token):self.set_status('请填写本机智能体生成的64位连接令牌，不要填写 API Key。'); return
+        def done(value):
+            self.token=token; self.store.set_setting('bridgeToken',token); self.set_status('已连接已有智能体服务，可以获取模型了。')
+        self.start_job(lambda job:NativeAgent(self.store,token,cancel=job.cancel).bridge('/health'),done)
 
     def save_settings(self):
         selected = self.model.currentData() if self.model.currentIndex() >= 0 and self.model.currentText() == self.model.itemText(self.model.currentIndex()) else self.model.currentText().strip()

@@ -14,7 +14,6 @@ import {
   type ProviderRequest,
 } from './types';
 import { parseSse, readErrorBody } from './sse';
-import { providerFetch } from '@/desktop/local-models';
 
 export interface AnthropicAdapterOptions {
   id: string;
@@ -114,7 +113,7 @@ export class AnthropicAdapter implements ProviderAdapter {
 
     let response: Response;
     try {
-      response = await providerFetch(joinUrl(this.baseUrl, '/v1/messages'), {
+      response = await fetch(joinUrl(this.baseUrl, '/v1/messages'), {
         method: 'POST',
         headers: {
           'content-type': 'application/json',

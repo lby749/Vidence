@@ -1,5 +1,4 @@
 import type { ProviderConfig } from '@/shared/types';
-import { providerFetch } from '@/desktop/local-models';
 import { joinUrl } from './types';
 
 export const API_SERVICES = [
@@ -25,7 +24,7 @@ export async function discoverModels(provider: ProviderConfig, signal?: AbortSig
   const headers: Record<string, string> = anthropic ? { 'x-api-key': provider.apiKey ?? '', 'anthropic-version': '2023-06-01', 'anthropic-dangerous-direct-browser-access': 'true' } : { Authorization: `Bearer ${provider.apiKey}` };
   const found = new Map<string, { id: string; label: string }>(); let after = '';
   for (let page = 0; page < 20; page++) {
-    const response = await providerFetch(joinUrl(base, anthropic ? '/v1/models' : '/models') + (after ? `?after_id=${encodeURIComponent(after)}` : ''), { headers, signal: signal ? AbortSignal.any([signal, AbortSignal.timeout(20000)]) : AbortSignal.timeout(20000) });
+    const response = await fetch(joinUrl(base, anthropic ? '/v1/models' : '/models') + (after ? `?after_id=${encodeURIComponent(after)}` : ''), { headers, signal: signal ? AbortSignal.any([signal, AbortSignal.timeout(20000)]) : AbortSignal.timeout(20000) });
     if (!response.ok) throw new Error(response.status === 401 ? 'Key 未通过验证，请检查是否复制完整。' : response.status === 403 ? '这个 Key 暂无模型列表权限。' : `无法获取模型列表（${response.status}），请检查服务地址或稍后重试。`);
     const body = await response.json(), rows = body.data ?? body.models;
     if (!Array.isArray(rows)) throw new Error('服务没有返回可识别的模型列表');

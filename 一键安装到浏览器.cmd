@@ -1,8 +1,4 @@
 @echo off
 chcp 65001 >nul
-if not exist "%~dp0dist\desktop-player\Vidence\一键启动.exe" (
-  echo 请先完整解压发布包，再运行其中的一键安装到浏览器.cmd。
-  pause
-  exit /b 1
-)
-start "" "%~dp0dist\desktop-player\Vidence\一键启动.exe" --install-browser
+echo 浏览器插件已独立发包，不需要安装桌面应用。请在下载页选择 Vidence-Browser-Extension.zip。
+start "" "https://github.com/lby749/Vidence/releases"

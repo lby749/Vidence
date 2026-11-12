@@ -1,16 +1,11 @@
-import { expect, it, vi } from 'vitest';
+import { expect, it } from 'vitest';
 import { VectorIndex } from '@/retrieval/engine';
 import { embeddingSpec } from '@/models/model-info';
 import type { VectorRecord } from '@/shared/types';
-const { desktop } = vi.hoisted(() => ({ desktop: vi.fn(() => false) }));
-vi.mock('@/desktop/local-models', () => ({ hasDesktopModels: desktop }));
 
-it('独立应用选择已验证的原生模型，扩展保留现有模型及各自的输入指令', () => {
-  desktop.mockReturnValue(false);
+it('扩展独立使用浏览器模型与输入指令，不切换到桌面计算服务', () => {
   expect(embeddingSpec().modelId).toBe('Xenova/bge-small-zh-v1.5');
-  desktop.mockReturnValue(true);
-  expect(embeddingSpec()).toMatchObject({ dimension: 768, dtype: 'Q4_K_M', pooling: 'mean', queryInstruction: 'task: search result | query: ', documentInstruction: 'title: none | text: ' });
-  desktop.mockReturnValue(false);
+  expect(embeddingSpec()).toMatchObject({ dimension: 512, dtype: 'q8', pooling: 'cls', documentInstruction: '' });
 });
 
 it('换模型时不会用旧模型的向量匹配新查询，即使维度相同', async () => {

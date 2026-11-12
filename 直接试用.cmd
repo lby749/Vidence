@@ -1,8 +1,4 @@
 @echo off
 chcp 65001 >nul
-if not exist "%~dp0dist\desktop-player\Vidence\一键启动.exe" (
-  echo 请先完整解压发布包，再运行其中的一键启动.exe。
-  pause
-  exit /b 1
-)
-start "" "%~dp0dist\desktop-player\Vidence\一键启动.exe"
+echo 这是源码目录。日常使用请到下载页选择原生桌面版或独立浏览器插件，无需安装开发工具。
+start "" "https://github.com/lby749/Vidence/releases"

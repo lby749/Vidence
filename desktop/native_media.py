@@ -24,10 +24,7 @@ from ui_locale import ui_text
 
 ROOT = Path(sys._MEIPASS) if getattr(sys, 'frozen', False) else Path(__file__).resolve().parents[1]
 STATE = Path(os.environ['VMA_STATE_DIR']) if os.environ.get('VMA_STATE_DIR') else Path(os.environ.get('LOCALAPPDATA', str(Path.home()))) / 'VideoMemoryAssistant' if getattr(sys, 'frozen', False) else ROOT / '.desktop-state'
-PORT = int(os.environ.get('VMA_PORT', '8132'))
-ORIGIN = f'http://127.0.0.1:{PORT}'
 PREVIEW_TICKET = secrets.token_urlsafe(24)
-MODEL_TICKET = secrets.token_urlsafe(32)
 
 
 def result(**values):
@@ -155,15 +152,19 @@ class NativeBridge(QObject):
                 return False
             except Exception:
                 return False
-        if not healthy() and not bridge_responded:
-            node = ROOT / ('runtime/node.exe' if os.name == 'nt' else 'runtime/node')
-            executable = str(node) if node.exists() else shutil.which('node')
-            if executable:
-                env = dict(os.environ, VMA_AGENT_STATE=str(token_path.parent))
-                log = (token_path.parent / 'bridge.log').open('ab')
-                subprocess.Popen([executable, str(ROOT / 'scripts/local-agent-bridge.mjs')], cwd=ROOT, env=env, stdout=log, stderr=log, creationflags=subprocess.CREATE_NO_WINDOW if os.name == 'nt' else 0)
-                log.close()
-        return result(token=token, modelTicket=MODEL_TICKET)
+        if healthy():return result(token=token)
+        if bridge_responded:return result(error='已有其他配对的智能体服务正在运行。请在设置中展开“连接已有服务”，选择它的配对文件或填写连接令牌。',existingBridge=True)
+        node = ROOT / ('runtime/node.exe' if os.name == 'nt' else 'runtime/node')
+        executable = str(node) if node.exists() else shutil.which('node')
+        if not executable:return result(error='本机智能体服务尚未准备好；也可以在设置中选择 API Key。')
+        env = dict(os.environ, VMA_AGENT_STATE=str(token_path.parent))
+        with (token_path.parent/'bridge.log').open('ab') as log:
+            subprocess.Popen([executable, str(ROOT / 'scripts/local-agent-bridge.mjs')], cwd=ROOT, env=env, stdout=log, stderr=log, creationflags=subprocess.CREATE_NO_WINDOW if os.name == 'nt' else 0)
+        for _ in range(30):
+            if healthy():return result(token=token)
+            if bridge_responded:return result(error='已有智能体服务使用不同配对，请从设置连接已有服务。',existingBridge=True)
+            time.sleep(.1)
+        return result(error='本机智能体服务未能启动，请重试连接；API Key 路线仍可使用。')
 
     @Slot(result=str)
     def currentSource(self):

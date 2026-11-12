@@ -134,7 +134,7 @@ class NativeAgent:
         self.store, self.token, self.status = store, token, status
         self.cancel = cancel or threading.Event()
         self.usage = []
-        self.models = models
+        self.local_models = models
 
     def bridge(self, path, body=None, method=None, cleanup=False):
         if self.cancel.is_set() and not cleanup: raise RuntimeError('已取消')
@@ -295,7 +295,7 @@ class NativeAgent:
         if self.store.rows('evidence', video_id):
             self.organize(video_id,bounds)
             notes = self.store.rows('nodes', video_id)
-        executor = NativeTools(self.store, video_id, question, allow_images, frame_ids, bounds, models=self.models)
+        executor = NativeTools(self.store, video_id, question, allow_images, frame_ids, bounds, models=self.local_models)
         memory = self.store.memory(video_id) if not bounds else None
         history = [{'question': row['question'], 'answer': row['answer'][:1800]} for row in self.store.rows('chats', video_id)[-4:]] if not bounds else []
         summaries=[{key:row[key] for key in ('id','summary','startTime','endTime','evidenceIds') if key in row} for row in notes if executor.in_range(row)]

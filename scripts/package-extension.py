@@ -18,7 +18,7 @@ for file in files:
     assert file.name!='desktop.html' and 'webengine' not in file.name.lower()
 with zipfile.ZipFile(output,'w',zipfile.ZIP_DEFLATED,compresslevel=6) as archive:
     for file in files:archive.write(file,Path('Vidence-Extension/extension')/file.relative_to(source))
-    archive.write(root/'scripts/install-extension.ps1','Vidence-Extension/安装插件.ps1')
+    archive.writestr('Vidence-Extension/安装插件.ps1',(root/'scripts/install-extension.ps1').read_text(encoding='utf-8-sig').encode('utf-8-sig'))
     archive.writestr('Vidence-Extension/安装到浏览器.cmd','@echo off\r\nchcp 65001 >nul\r\npowershell.exe -NoProfile -ExecutionPolicy Bypass -File "%~dp0安装插件.ps1"\r\npause\r\n'.encode('utf8'))
     archive.writestr('Vidence-Extension/使用说明.txt','''Vidence · 浏览器插件 BETA
 

@@ -1,8 +1,6 @@
 import manifest from './model-manifest.json';
 import { APPROX_MODEL_FILES, EMBEDDING_MODEL_ID, RERANK_MODEL_ID, MODEL_REVISIONS } from './model-info';
 import { RESOURCE_TIERS, type ResourceTier } from '@/shared/resource-tiers';
-import desktopEmbedding from './desktop-embedding.json';
-import { hasDesktopModels, desktopModelRequest, downloadDesktopModel } from '@/desktop/local-models';
 
 export interface ModelFile { path: string; url: string; bytes: number; sha256: string }
 export const MODEL_CACHE = 'vma-models-v1';
@@ -15,7 +13,7 @@ export const MODEL_FILES: ModelFile[] = CAPABILITIES.flatMap(capability => capab
 export function tierCapabilities(id: ResourceTier) {
   const tier = RESOURCE_TIERS.find(tier => tier.id === id);
   if (!tier) throw new Error('请选择有效的占用档位');
-  return CAPABILITIES.filter(item => (tier.capabilities as readonly string[]).includes(item.id)).map(item => item.id === 'vector' && hasDesktopModels() ? { ...item, description: '使用轻量量化模型进行多语言查找；显卡优先，不可用时自动使用处理器。', files: [{ ...desktopEmbedding, path: `native-models/${desktopEmbedding.name}` }] } : item);
+  return CAPABILITIES.filter(item => (tier.capabilities as readonly string[]).includes(item.id));
 }
 export function tierDownloadBytes(id: ResourceTier): number {
   return tierCapabilities(id).reduce((sum, capability) => sum + capability.files.reduce((total, file) => total + file.bytes, 0), 0);
@@ -46,12 +44,10 @@ export async function installedCapabilities(): Promise<Record<string, boolean>> 
   const cache = await caches.open(MODEL_CACHE);
   const entries = await Promise.all(CAPABILITIES.map(async item => [item.id, (await Promise.all(item.files.map(file => cache.match(cacheKey(file))))).every(Boolean)]));
   const result = Object.fromEntries(entries);
-  if (hasDesktopModels()) result.vector = (await desktopModelRequest<{ installed: boolean }>('status')).installed;
   return result;
 }
 
 export async function downloadCapability(id: string, signal: AbortSignal, progress: (loaded: number, total: number) => void): Promise<void> {
-  if (id === 'vector' && hasDesktopModels()) { await downloadDesktopModel(signal, progress); return; }
   const capability = CAPABILITIES.find(item => item.id === id);
   if (!capability) throw new Error('未知的功能');
   const cache = await caches.open(MODEL_CACHE);

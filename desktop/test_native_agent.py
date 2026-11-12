@@ -46,6 +46,11 @@ class NativeAgentChecks(unittest.TestCase):
         self.assertNotIn('math formula', prompts[0]); self.assertNotIn('EXCEL PRIVATE', prompts[0])
         self.assertEqual(len(self.store.rows('chats', 'excel')), 0)
 
+    def test_model_discovery_remains_callable_when_local_search_models_are_attached(self):
+        agent=NativeAgent(self.store,models=object())
+        with patch.object(agent,'bridge',return_value={'models':[{'id':'selected-model','label':'Selected model'}]}):
+            self.assertEqual(agent.models()[0]['id'],'selected-model')
+
     def test_filtered_frames_require_manual_restore_and_global_permission(self):
         frame = self.store.get('keyframes', 'math', 'image'); frame['review'] = {'kind': 'speaker'}
         self.store.put('keyframes', 'math', frame); self.store.set_setting('allowVisionUpload', True)
