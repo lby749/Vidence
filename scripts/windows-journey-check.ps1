@@ -21,10 +21,9 @@ $state=Join-Path ([IO.Path]::GetTempPath()) ('vidence-journey-'+[guid]::NewGuid(
 New-Item -ItemType Directory -Path $state | Out-Null
 $originalPath=$env:PATH
 try {
-    # The model's original VL template omits tool definitions. llama.cpp's
-    # documented ChatML fallback enables real client tools; image controls below
-    # still have to prove that the original pixels reached the model.
-    $serverArguments=@('--host','127.0.0.1','--port',"$port",'--model',('"'+(Join-Path $components 'Qwen2.5-VL-3B-Instruct-Q4_K_M.gguf')+'"'),'--mmproj',('"'+(Join-Path $components 'mmproj-Qwen2.5-VL-3B-Instruct-Q8_0.gguf')+'"'),'--alias','vidence-cloud-vision','--ctx-size','8192','--n-predict','512','--parallel','1','--threads','3','--gpu-layers','0','--jinja','--chat-template','chatml','--image-min-tokens','1024','--temp','0')
+    # The VL model and generic ChatML templates omit tool definitions. Use the
+    # pinned upstream Qwen tool template; image controls must still prove pixels.
+    $serverArguments=@('--host','127.0.0.1','--port',"$port",'--model',('"'+(Join-Path $components 'Qwen2.5-VL-3B-Instruct-Q4_K_M.gguf')+'"'),'--mmproj',('"'+(Join-Path $components 'mmproj-Qwen2.5-VL-3B-Instruct-Q8_0.gguf')+'"'),'--alias','vidence-cloud-vision','--ctx-size','8192','--n-predict','512','--parallel','1','--threads','3','--gpu-layers','0','--jinja','--chat-template-file',('"'+(Join-Path $components 'Qwen-Qwen2.5-7B-Instruct.jinja')+'"'),'--image-min-tokens','1024','--temp','0')
     $env:PATH=Join-Path $env:SystemRoot 'System32'
     Remove-Item Env:PYTHONHOME,Env:PYTHONPATH,Env:NODE_OPTIONS -ErrorAction SilentlyContinue
     if ((Get-Command python -ErrorAction SilentlyContinue) -or (Get-Command node -ErrorAction SilentlyContinue)) { throw 'System development runtimes remain reachable' }
