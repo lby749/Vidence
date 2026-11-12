@@ -80,4 +80,20 @@ EXE在新Windows runner构建，输入是Linux已验收的同一个ZIP；搬到�
 
 0.4.1两次云端43168897895、43169542831在Windows Edge发现内层关闭操作未完成，发布均自动跳过；Linux通过。第二轮诊断显示父页面未收到任何关闭事件（trace为空），接收端兼容null source的修补未解决，已删除该过渡guard及对应8项测试。最终改为UI runtime.sendMessage → 后台验证tabId → tabs.sendMessage → 内容脚本closeDock，删除原postMessage关闭/弹出接收器，用户页面不能通过该旧通道控制关闭。
 
-原145项单元检查保持通过；真实浏览器E2E继续点击内层×，额外核对后台收到目标视频tabId、拒绝无效目标、关闭不停止记录、不随刷新自动弹回。iframe URL中的tabId用于首屏状态尚未加载时的关闭请求；没有退回其他活动标签页。真实Edge仍须新云端再次验收，不能仅以本机和单元测试替代。
+原145项单元检查保持通过；真实浏览器E2E继续点击内层×，额外核对后台收到目标视频tabId、拒绝无效目标、关闭不停止记录、不随刷新自动弹回。iframe URL中的tabId用于首屏状态尚未加载时的关闭请求；没有退回其他活动标签页。真实Edge由下述新云端流水线再次验收，没有用本机或单元测试替代。
+
+
+### 0.4.1 最终验收与公开下载
+
+[流水线43170402148](https://github.com/lby749/Vidence/actions/runs/43170402148)基于1ea095b891e337a8ae9976ab7562c834ba523b64，Linux Chromium、Windows Edge、另一台Windows安装器构建/搬移验收及release共4个任务全部success。两平台完整插件检查均实际点击内层×并观察正确目标tabId；原145项单元测试保持通过。
+
+[v0.4.1公开发布页](https://github.com/lby749/Vidence/releases/tag/v0.4.1)为正式Latest，非草稿/非预发布。匿名完整下载两包、SHA资产与GitHub上传digest逐一一致：
+
+| 文件 | 字节 | SHA256 |
+| --- | ---: | --- |
+| Vidence-Browser-Extension.zip | 25,589,328 | 0678941294b9e0c67df775ce3694d4a7542efed263be08015f31db3b8accba99 |
+| Vidence-Extension-Setup-Windows.exe | 25,699,328 | 55ea13547b0f1702fdedb90f455a9ad487cd4e4e5172171b0ff0836d2258e120 |
+
+公开EXE在本机再次搬移运行，PATH仅System32，自检全部通过；输出的内嵌payload SHA等于公开ZIP。ZIP CRC/根manifest/无EXE与命令脚本/无模型与浏览器内核检查通过。实际公开目录输入更新解析器，0.4.0可获得0.4.1提示，0.4.1不误报升级。EXE Authenticode状态NotSigned，用户安装说明已如实提示。
+
+这些结果仍不是物理空白Windows、用户真实账号下自动安装、macOS实机或新增真实模型验收。浏览器首次加载确认仍由用户操作。
