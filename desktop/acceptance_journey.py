@@ -11,7 +11,8 @@ import time
 import traceback
 from PySide6.QtCore import Qt,QTimer
 from PySide6.QtTest import QTest
-from PySide6.QtWidgets import QApplication,QFileDialog,QPushButton
+from PySide6.QtGui import QFontDatabase
+from PySide6.QtWidgets import QApplication,QFileDialog,QPushButton,QLineEdit
 from app_version import VERSION
 from native_store import NativeStore
 from native_agent import NativeAgent
@@ -26,6 +27,8 @@ class Journey:
         self.result={'version':VERSION,'scope':'frozen-native-user-journey-generated-teaching-media','phase':self.plan['phase'],'realModel':True,'model':self.plan['model'],'steps':[],'passed':False}
         self.config={'route':'api','protocol':'openai','baseUrl':self.plan['baseUrl'],'model':self.plan['model'],'apiKey':'journey-loopback-only'}
         assert self.config['baseUrl'].startswith('http://127.0.0.1:')
+        if os.name=='nt':
+            for name in ('segoeui.ttf','msyh.ttc'):QFontDatabase.addApplicationFont(str(Path(os.environ['WINDIR'])/'Fonts'/name))
         if self.plan['phase']=='record':
             store=NativeStore(state/'learning.sqlite')
             for key,value in {'assistant':self.config,'appUpdates':{'auto':False},'uiLanguage':'en','answerLanguage':'English','allowVisionUpload':True,'ocrEnabled':True,'ocrLanguage':'en-US','resourceTier':'low'}.items():store.set_setting(key,value)
@@ -51,11 +54,22 @@ class Journey:
         QTest.mouseClick(candidates[0],Qt.MouseButton.LeftButton)
 
     def file_dialog(self,action,path):
+        errors=[]
         def choose():
             dialog=QApplication.activeModalWidget()
-            assert isinstance(dialog,QFileDialog),'Expected the actual Qt file chooser'
-            dialog.selectFile(str(path)); dialog.accept()
-        QTimer.singleShot(200,choose); action()
+            if not isinstance(dialog,QFileDialog):errors.append('Expected the actual Qt file chooser');return
+            edit=dialog.findChild(QLineEdit,'fileNameEdit')
+            if edit is None:errors.append('File chooser input missing');dialog.reject();return
+            edit.setText(str(path));dialog.accept()
+            if dialog.isVisible():errors.append('File chooser did not accept the requested file');dialog.reject()
+        def timeout():
+            errors.append('File chooser timed out')
+            dialog=QApplication.activeModalWidget()
+            if dialog:dialog.reject()
+        timer=QTimer();timer.setSingleShot(True);timer.timeout.connect(timeout);timer.start(10000)
+        try:QTimer.singleShot(200,choose);action()
+        finally:timer.stop()
+        assert not errors,errors
 
     def ask(self,question,images=False):
         identifier=self.sidebar.video_id; previous=len(self.store.rows('chats',identifier))
