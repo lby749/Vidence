@@ -51,6 +51,25 @@ class NativeAgentChecks(unittest.TestCase):
         with patch.object(agent,'bridge',return_value={'models':[{'id':'selected-model','label':'Selected model'}]}):
             self.assertEqual(agent.models()[0]['id'],'selected-model')
 
+    def test_image_directory_respects_consent_whitelist_video_and_time(self):
+        self.store.set_setting('allowVisionUpload',True)
+        self.store.put('nodes','math',{'id':'summary','summary':'No visual description in this summary','evidenceIds':['text'],'startTime':10,'endTime':12})
+        self.store.put('keyframes','math',{'id':'outside','time':99,'imageDataUrl':'data:image/png;base64,cHJpdmF0ZQ=='})
+        self.store.put('keyframes','excel',{'id':'other-video','time':11,'imageDataUrl':'data:image/png;base64,cHJpdmF0ZQ=='})
+        contexts=[]
+        class Agent(NativeAgent):
+            def complete(self,prompt,executor=None):
+                contexts.append(json.loads(prompt.split('本视频摘要资料：')[1]));return 'answer'
+        for allowed in (False,True):
+            Agent(self.store).ask('math','What is shown?',allowed,['image'],(10,15))
+        self.assertEqual(contexts[0]['imageAccess'],{'allowed':False,'frames':[]})
+        self.assertEqual(contexts[1]['imageAccess'],{'allowed':True,'frames':[{'id':'image','time':11}]})
+        self.assertNotIn('imageDataUrl',json.dumps(contexts))
+        self.assertNotIn('other-video',json.dumps(contexts));self.assertNotIn('outside',json.dumps(contexts))
+        self.store.set_setting('allowVisionUpload',False)
+        Agent(self.store).ask('math','What is shown?',True,['image'],(10,15))
+        self.assertEqual(contexts[-1]['imageAccess'],{'allowed':False,'frames':[]})
+
     def test_filtered_frames_require_manual_restore_and_global_permission(self):
         frame = self.store.get('keyframes', 'math', 'image'); frame['review'] = {'kind': 'speaker'}
         self.store.put('keyframes', 'math', frame); self.store.set_setting('allowVisionUpload', True)

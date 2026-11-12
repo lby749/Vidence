@@ -298,12 +298,13 @@ class NativeAgent:
         memory = self.store.memory(video_id) if not bounds else None
         history = [{'question': row['question'], 'answer': row['answer'][:1800]} for row in self.store.rows('chats', video_id)[-4:]] if not bounds else []
         summaries=[{key:row[key] for key in ('id','summary','startTime','endTime','evidenceIds') if key in row} for row in notes if executor.in_range(row)]
-        context = {'videoId': video_id, 'title': self.store.video(video_id)['title'], 'memory': memory.get('body', '')[:5000] if memory else '', 'notes': summaries[-20:], 'history': history}
+        image_access={'allowed':executor.allow_images,'frames':[{'id':row['id'],'time':row.get('time',0)} for row in list(executor.frames.values())[-6:]] if executor.allow_images else []}
+        context = {'videoId': video_id, 'title': self.store.video(video_id)['title'], 'memory': memory.get('body', '')[:5000] if memory else '', 'notes': summaries[-20:], 'history': history,'imageAccess':image_access}
         while len(json.dumps(context,ensure_ascii=False))>12000:
             if context['notes']:context['notes'].pop(0)
             elif context['history']:context['history'].pop(0)
             else:context['memory']=context['memory'][:3000]; break
-        prompt = '围绕当前视频回答。初始上下文只有AI学习摘要和记忆，它们可能有误；需要核对时调用工具读取原文。不要读取其他视频。OCR可能有错字和错行，不能用重复编号推定合并单元格、一对多或子集，不把摘要中的推测写成原视频已讲的知识。要回答画面内容先get_timeline再get_frame。没有读图时明确不能确认画面。回答引用请标注真正读到的记录ID与时间。\n回答语言：'+self.store.setting('answerLanguage', '跟随问题')+'\n表达风格：'+self.store.setting('answerStyle', '清晰自然')+'\n问题：'+question+'\n本视频摘要资料：'+json.dumps(context, ensure_ascii=False)[:15000]
+        prompt = '围绕当前视频回答。初始上下文只有AI学习摘要、记忆和原图目录，它们可能有误；需要核对时调用工具读取原文。不要读取其他视频。OCR可能有错字和错行，不能用重复编号推定合并单元格、一对多或子集，不把摘要中的推测写成原视频已讲的知识。imageAccess列出本次是否允许读图及可读原图ID；摘要写“未提供图像”只代表摘要没有描述，不能证明没有原图。涉及画面且imageAccess.allowed为true时必须调用get_frame读取目录中的原图，不能因为摘要缺少视觉描述就回答无法查看。需要更多候选图先get_timeline。未授权或未实际读图时明确不能确认画面。回答引用请标注真正读到的记录ID与时间。\n回答语言：'+self.store.setting('answerLanguage', '跟随问题')+'\n表达风格：'+self.store.setting('answerStyle', '清晰自然')+'\n问题：'+question+'\n本视频摘要资料：'+json.dumps(context, ensure_ascii=False)[:15000]
         self.status('正在回答…')
         answer = self.complete(prompt, executor)
         if self.cancel.is_set(): raise RuntimeError('已取消')
