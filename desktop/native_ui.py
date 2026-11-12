@@ -1,13 +1,12 @@
 """Qt Widgets学习侧栏；不使用HTML页面、JavaScript或浏览器控件承载界面。"""
 import base64
-import hashlib
 import json
 from pathlib import Path
 import threading
 import time
 import uuid
 from PySide6.QtCore import QObject, Qt, QTimer, QUrl, Signal
-from PySide6.QtGui import QDesktopServices, QIcon, QImage, QPixmap, QTextDocument
+from PySide6.QtGui import QDesktopServices, QPixmap
 from PySide6.QtWidgets import (QApplication, QCheckBox, QComboBox, QDialog, QDialogButtonBox,
     QFileDialog, QFormLayout, QFrame, QHBoxLayout, QInputDialog, QLabel, QLineEdit,
     QListWidget, QListWidgetItem, QMessageBox, QPushButton, QScrollArea, QSpinBox,
@@ -77,7 +76,7 @@ class NativeSidebar(QWidget):
         self.recorder.changed.connect(self.record_changed); self.recorder.problem.connect(self.set_status)
         self.recorder.ocr_requested.connect(self.ocr)
         self.root_layout = QVBoxLayout(self); self.root_layout.setContentsMargins(14, 16, 14, 14); self.root_layout.setSpacing(10)
-        self.rail = button('›', lambda: bridge.collapseSidebar(False)); self.rail.hide(); self.root_layout.addWidget(self.rail)
+        self.rail = button('›', lambda: bridge.collapseSidebar(False)); self.rail.setFixedSize(32,40); self.rail.hide(); self.root_layout.addWidget(self.rail)
         self.body = QWidget(); self.root_layout.addWidget(self.body)
         layout = QVBoxLayout(self.body); layout.setContentsMargins(0,0,0,0); layout.setSpacing(12)
         header = QHBoxLayout(); logo = QLabel(); logo.setPixmap(QPixmap(str(ROOT/'public/brand/icon-128.png')).scaled(28,28,Qt.AspectRatioMode.KeepAspectRatio,Qt.TransformationMode.SmoothTransformation)); header.addWidget(logo)
@@ -125,7 +124,10 @@ class NativeSidebar(QWidget):
         # 仅建立本机配对；不读取或显示智能体的登录凭据。
         self.start_job(lambda job: json.loads(self.bridge.bootstrap()), lambda value: setattr(self, 'token', value['token']))
 
-    def set_status(self, text): self.status.setText(ui_text(str(text)[:350],self.store.setting('uiLanguage','zh-CN')))
+    def display_text(self,control,text):
+        translated=ui_text(text,self.store.setting('uiLanguage','zh-CN')); control.setProperty('uiOriginal',text); control.setProperty('uiTranslated',translated); control.setText(translated)
+
+    def set_status(self, text): self.display_text(self.status,str(text)[:350])
 
     def toggle_collapse(self):
         if self.bridge.presentation.docked or self.bridge.presentation.target: self.bridge.collapseSidebar(True)
@@ -134,6 +136,7 @@ class NativeSidebar(QWidget):
     def attach_sidebar(self):
         if self.video_id and (not self.bridge.current_source or self.bridge.current_source['id'] != self.video_id):
             video = self.store.video(self.video_id)
+            if video.get('url','').startswith('vma-course:'):self.pick_window(video); return
             result = json.loads(self.bridge.openSource(video['url'],0))
             if result.get('error'): self.set_status(result['error']); return
             if not result.get('source'): self.set_status('请重新选择这节课程的实际窗口，再继续记录。'); return
@@ -142,7 +145,8 @@ class NativeSidebar(QWidget):
 
     def bridge_event(self, name, value):
         if name == 'desktop:presentation':
-            self.body.setVisible(not value.get('collapsed')); self.rail.setVisible(bool(value.get('collapsed')))
+            collapsed=bool(value.get('collapsed'))
+            self.body.setVisible(not collapsed); self.rail.setVisible(collapsed); self.root_layout.setContentsMargins(8,8,8,8) if collapsed else self.root_layout.setContentsMargins(14,16,14,14)
         elif name == 'desktop:source-changed': self.select_source(value)
         elif name == 'desktop:source-title' and value.get('id') == self.video_id:
             previous = self.store.video(self.video_id)
@@ -162,7 +166,7 @@ class NativeSidebar(QWidget):
             self.store.save_video(video)
             self.question.setPlainText(self.store.setting('draft:'+self.video_id, ''))
         video = self.store.video(self.video_id)
-        self.title.setText(video['title']); self.lesson_name.setText(video['title']); self.source_toggle.setText('切换视频或课程  ⌄')
+        self.title.setText(video['title']); self.lesson_name.setText(video['title']); self.display_text(self.source_toggle,'切换视频或课程  ▾')
         self.source_panel.hide(); self.refresh_current(); self.refresh_library(); self.set_status('资料和聊天只属于这一个视频。')
 
     def open_local(self):
@@ -179,7 +183,8 @@ class NativeSidebar(QWidget):
         if result.get('error'): self.set_status(result['error'])
         elif not result.get('inApp'): self.set_status('已在浏览器打开；用浏览器插件学习，或选择“课程窗口”挂靠原生学习栏。')
 
-    def pick_window(self):
+    def pick_window(self,existing_video=None):
+        if not isinstance(existing_video,dict):existing_video=None
         candidates = json.loads(self.bridge.windows())
         if not candidates: self.set_status('没有找到可记录的窗口，请先打开课程。'); return
         dialog = QDialog(self); dialog.setWindowTitle('选择课程窗口'); dialog.resize(520,460); layout = QVBoxLayout(dialog)
@@ -189,12 +194,15 @@ class NativeSidebar(QWidget):
         actions = QDialogButtonBox(QDialogButtonBox.StandardButton.Ok|QDialogButtonBox.StandardButton.Cancel); actions.accepted.connect(dialog.accept); actions.rejected.connect(dialog.reject); layout.addWidget(actions)
         if dialog.exec() != QDialog.DialogCode.Accepted or not listing.currentItem(): return
         candidate = listing.currentItem().data(Qt.ItemDataRole.UserRole)
-        title, accepted = QInputDialog.getText(self, '课程名称', '不同课程请使用不同名称，便于分别保存与复习。', text=candidate['title'])
-        if not accepted or not title.strip(): return
+        if existing_video:title=existing_video['title']
+        else:
+            title, accepted = QInputDialog.getText(self, '课程名称', '给这节课起个名称。每次新选课程会独立保存，续学已有课程请从视频库打开。', text=candidate['title'])
+            if not accepted or not title.strip(): return
         result = json.loads(self.bridge.captureWindow(candidate['id']))
         if result.get('error'): self.set_status(result['error']); return
-        identifier = 'course_'+hashlib.sha256(title.strip().encode()).hexdigest()[:24]
-        source = {'id': identifier, 'title': title.strip(), 'url': 'vma-course://lesson/'+identifier, 'kind': 'window'}
+        identifier = existing_video['id'] if existing_video else 'course_'+uuid.uuid4().hex
+        from presentation import window_title
+        source = {'id': identifier, 'title': title.strip(), 'url': 'vma-course://lesson/'+identifier, 'kind': 'window','captureTitle':window_title(self.bridge.target_window) or candidate['title']}
         self.bridge.current_source = source; self.select_source(source); self.attach_sidebar()
 
     def rename(self):
@@ -208,7 +216,7 @@ class NativeSidebar(QWidget):
         else: self.set_status('请先打开或关联这个视频。')
 
     def record_changed(self):
-        active = bool(self.recorder.video_id); self.record.setText(ui_text('停止记录' if active else '开始记录',self.store.setting('uiLanguage','zh-CN'))); self.capture.setEnabled(active)
+        active = bool(self.recorder.video_id); self.display_text(self.record,'停止记录' if active else '开始记录'); self.capture.setEnabled(active)
         if hasattr(self, 'frames'): self.refresh_notes()
 
     def ocr(self, video_id, frame_id, image, stamp):
@@ -385,14 +393,14 @@ class NativeSidebar(QWidget):
         for label,value in [('OpenCode Go','opencode-go'),('DeepSeek Harness','dsh'),('Codex CLI','codex'),('Claude Code','claude')]: self.backend.addItem(label,value)
         self.base_url=QLineEdit(); self.base_url.setPlaceholderText('https://服务商地址/v1')
         self.api_key=QLineEdit(); self.api_key.setEchoMode(QLineEdit.EchoMode.Password); self.api_key.setPlaceholderText('仅保存在本机，不随学习资料导出')
-        self.model=QComboBox(); self.model.setEditable(True); self.model.addItem('deepseek-v4.1-flash','deepseek-v4.1-flash')
+        self.model=QComboBox(); self.model.setEditable(True); self.model.setMaxVisibleItems(12); self.model.setMinimumContentsLength(16); self.model.setSizeAdjustPolicy(QComboBox.SizeAdjustPolicy.AdjustToMinimumContentsLengthWithIcon); self.model.addItem('deepseek-v4.1-flash','deepseek-v4.1-flash'); self.model.completer().setFilterMode(Qt.MatchFlag.MatchContains); self.model.completer().setCaseSensitivity(Qt.CaseSensitivity.CaseInsensitive)
         self.api_service=QComboBox()
         for label,value in [('DeepSeek',('deepseek','https://api.deepseek.com/v1','openai')),('SiliconFlow',('siliconflow','https://api.siliconflow.cn/v1','openai')),('OpenRouter',('openrouter','https://openrouter.ai/api/v1','openai')),('OpenAI',('openai','https://api.openai.com/v1','openai')),('Anthropic',('anthropic','https://api.anthropic.com/v1','anthropic')),('自定义',('custom','','openai'))]:self.api_service.addItem(label,value)
         self.protocol=QComboBox(); self.protocol.addItem('OpenAI compatible','openai'); self.protocol.addItem('Anthropic','anthropic'); form.addRow('服务商',self.api_service); form.addRow('API 协议',self.protocol)
         for label,control in [('连接方式',self.route),('智能体',self.backend),('API 地址',self.base_url),('API Key',self.api_key),('使用模型',self.model)]:form.addRow(label,control)
         self.settings_form=form; layout.addLayout(form); layout.addWidget(button('连接并获取可用模型',self.discover,True))
-        self.vision=QCheckBox('允许向 AI 发送截图（提问时仍需勾选）'); layout.addWidget(self.vision)
-        self.ocr_enabled=QCheckBox('记录时识别画面文字 · 使用系统文字识别'); layout.addWidget(self.ocr_enabled)
+        self.vision=QCheckBox('允许 AI 读取画面'); self.vision.setToolTip('每次提问仍需勾选，不会自动上传保存的截图。'); layout.addWidget(self.vision)
+        self.ocr_enabled=QCheckBox('识别视频里的文字'); self.ocr_enabled.setToolTip('在本机使用系统文字识别，不发送截图。'); layout.addWidget(self.ocr_enabled)
         self.resource_tier=QComboBox()
         for label,value in [('无占用 · 关键词检索','none'),('低占用 · 系统文字识别','low'),('中占用 · 文字识别与语义检索','medium'),('高占用 · 更频繁地记录文字','high')]:self.resource_tier.addItem(label,value)
         self.resource_tier.setCurrentIndex(max(0,self.resource_tier.findData(self.store.setting('resourceTier','none')))); self.resource_tier.activated.connect(self.change_resource_tier); layout.addWidget(self.resource_tier)
@@ -401,7 +409,7 @@ class NativeSidebar(QWidget):
         self.answer_style=QComboBox(); self.answer_style.addItems(['清晰自然','简洁重点','循序渐进','深入讲解']); self.answer_style.setCurrentText(self.store.setting('answerStyle','清晰自然')); layout.addWidget(self.answer_style)
         self.frame_budget=QSpinBox(); self.frame_budget.setRange(10,300); self.frame_budget.setValue(self.store.setting('frameBudget',60)); self.frame_budget.setPrefix('每个视频最多 '); self.frame_budget.setSuffix(' 张候选画面'); layout.addWidget(self.frame_budget)
         layout.addWidget(button('保存设置',self.save_settings))
-        layout.addWidget(button('下载离线检索资源 · GPU 优先，可降级 CPU',self.download_models))
+        download=button('下载离线检索资源',self.download_models); download.setToolTip('显卡优先，不可用时自动使用处理器。'); layout.addWidget(download)
         layout.addWidget(button('释放离线模型内存',lambda:self.models.unload()))
         self.auto_updates=QCheckBox('自动提醒应用新版本'); self.auto_updates.setChecked(self.store.setting('appUpdates',{}).get('auto',True)); self.auto_updates.toggled.connect(self.set_auto_updates); layout.addWidget(self.auto_updates)
         layout.addWidget(button('检查应用更新',lambda:self.check_updates(True)))
@@ -462,6 +470,11 @@ class NativeSidebar(QWidget):
             if isinstance(control,(QLineEdit,QTextEdit)):
                 original=control.property('uiPlaceholder') or control.placeholderText(); control.setProperty('uiPlaceholder',original); control.setPlaceholderText(ui_text(original,locale))
         for index,text in enumerate(('提问','笔记','记忆','视频库','设置')):self.tabs.setTabText(index,ui_text(text,locale))
+        self.scope.setItemText(0,ui_text('整个视频',locale))
+        for index in range(self.browser.count()):
+            if self.browser.itemData(index) in ('default','in-app'):self.browser.setItemText(index,ui_text('系统默认浏览器' if self.browser.itemData(index)=='default' else '应用内播放（支持网页全屏）',locale))
+        self.frame_budget.setPrefix('Per video: ' if locale=='en' else '每部影片最多 ' if locale=='zh-TW' else '每个视频最多 ')
+        self.frame_budget.setSuffix(' candidate frames' if locale=='en' else ' 張候選畫面' if locale=='zh-TW' else ' 张候选画面')
         for combo in (self.route,self.resource_tier,self.answer_style):
             for index in range(combo.count()):
                 original=combo.itemData(index,Qt.ItemDataRole.UserRole+1) or combo.itemText(index); combo.setItemData(index,original,Qt.ItemDataRole.UserRole+1); combo.setItemText(index,ui_text(original,locale))

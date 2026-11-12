@@ -146,7 +146,15 @@ jobs:
         run: |
           tag=$(python -c "import json;print('v'+json.load(open('package.json'))['version'])")
           if gh release view "$tag" >/dev/null 2>&1; then
-            echo 'This version already exists; its release and assets stay unchanged.'
-            exit 0
+            draft=$(gh release view "$tag" --json isDraft --jq '.isDraft')
+            if [ "$draft" != true ]; then
+              echo 'This published version already exists; its release and assets stay unchanged.'
+              exit 0
+            fi
+            target=$(gh release view "$tag" --json targetCommitish --jq '.targetCommitish')
+            test "$target" = "$GITHUB_SHA" || { echo 'The existing draft belongs to another source commit.'; exit 1; }
+            gh release upload "$tag" release/Vidence-Desktop-Windows-x64.zip release/Vidence-Desktop-Windows-x64.zip.sha256 release/Vidence-Browser-Extension.zip release/Vidence-Browser-Extension.zip.sha256 --clobber
+          else
+            gh release create "$tag" release/Vidence-Desktop-Windows-x64.zip release/Vidence-Desktop-Windows-x64.zip.sha256 release/Vidence-Browser-Extension.zip release/Vidence-Browser-Extension.zip.sha256 --target "$GITHUB_SHA" --draft --prerelease --title "Vidence $tag · BETA" --notes-file docs/release-notes.md
           fi
-          gh release create "$tag" release/Vidence-Desktop-Windows-x64.zip release/Vidence-Desktop-Windows-x64.zip.sha256 release/Vidence-Browser-Extension.zip release/Vidence-Browser-Extension.zip.sha256 --target "$GITHUB_SHA" --prerelease --title "Vidence $tag · BETA" --notes-file docs/release-notes.md
+          gh release edit "$tag" --draft=false --prerelease --latest=false

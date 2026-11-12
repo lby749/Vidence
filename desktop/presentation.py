@@ -28,6 +28,15 @@ def find_window(title):
     return found[0] if len(found) == 1 else None
 
 
+def window_title(handle):
+    if os.name!='nt' or not handle:return None
+    api=ctypes.windll.user32
+    api.GetWindowTextLengthW.argtypes=[wintypes.HWND]
+    api.GetWindowTextW.argtypes=[wintypes.HWND,wintypes.LPWSTR,ctypes.c_int]
+    text=ctypes.create_unicode_buffer(api.GetWindowTextLengthW(handle)+1)
+    api.GetWindowTextW(handle,text,len(text)); return text.value
+
+
 def window_bounds(identifier):
     if os.name != 'nt': return None
     api = ctypes.windll.user32

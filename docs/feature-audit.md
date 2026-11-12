@@ -38,3 +38,7 @@
 Vidence BETA.3的四项云端任务及GitHub发布已通过本轮检查，仓库已公开。应用、启动器、扩展与下载包统一使用Vidence；旧版需手动安装一次新版，原学习数据目录保留。真实缺少WebView2、Apple/AMD实机等尚未覆盖的范围与各证据层见verification.md。
 
 感谢您的支持，如果有帮助的话，请点一个 [STAR](https://github.com/lby749/Vidence)，谢谢！
+
+## BETA.4 原生分包
+
+桌面主界面和学习侧栏改用Qt Widgets，浏览器插件独立构建和发包；二者都不捆绑浏览器内核。原生主学习流程、数据迁移范围及尚未迁移的渠道/同步能力见[原生版说明](native-desktop.md)，不要将插件侧已有能力一律写成原生版已支持。

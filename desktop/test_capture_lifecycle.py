@@ -30,12 +30,10 @@ class CaptureChecks(unittest.TestCase):
         self.assertEqual(decoded.width(), 64)
         self.assertGreater(decoded.pixelColor(10, 10).blue(), 200)
 
-    def test_notify_updates_the_existing_page(self):
-        page = Mock()
-        NativeBridge.notify(SimpleNamespace(page=page), 'desktop:presentation', {'attached': True})
-        script = page.runJavaScript.call_args.args[0]
-        self.assertIn('window.dispatchEvent(new CustomEvent(', script)
-        self.assertIn('"attached": true', script)
+    def test_notify_uses_native_signal_without_page_or_javascript(self):
+        changed = Mock()
+        NativeBridge.notify(SimpleNamespace(changed=changed), 'desktop:presentation', {'attached':True})
+        changed.emit.assert_called_once_with('desktop:presentation',{'attached':True})
 
     def test_same_web_window_does_not_restart_capture(self):
         web = Mock(); web.isVisible.return_value = True; web.winId.return_value = 17; web.windowTitle.return_value = 'owned'

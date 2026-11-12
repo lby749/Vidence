@@ -55,7 +55,6 @@ class NativeBridge(QObject):
         super().__init__(window)
         self.window = window
         self.ui_language = 'zh-CN'
-        self.page = getattr(window, 'bridge_page', None)
         self.capturable = {}
         self.latest = {}
         self.preview_frame = (0, b'')
@@ -92,10 +91,7 @@ class NativeBridge(QObject):
         self.web_attach_pending = False
 
     def notify(self, name, detail):
-        if hasattr(self, "changed"): self.changed.emit(name, detail)
-        # QWebChannel 的信号订阅会受原生 WebView 换父窗口影响；页面对象保持不变。
-        if self.page:
-            self.page.runJavaScript('window.dispatchEvent(new CustomEvent(' + json.dumps(name) + ',{detail:' + json.dumps(detail, ensure_ascii=True) + '}))')
+        self.changed.emit(name, detail)
 
     def ui_text(self, text): return ui_text(text, self.ui_language)
 

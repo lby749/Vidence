@@ -22,7 +22,8 @@ if os.name=='nt':
     for name in ('segoeui.ttf','msyh.ttc'):QFontDatabase.addApplicationFont(str(Path(os.environ['WINDIR'])/'Fonts'/name))
 with tempfile.TemporaryDirectory(prefix='vidence-native-check-') as temp:
     store=NativeStore(Path(temp)/'test.sqlite'); window=QMainWindow(); window.resize(450,860)
-    bridge=NativeBridge(window); models=LocalModels(root,Path(temp))
+    with patch('native_media.STATE',Path(temp)):bridge=NativeBridge(window)
+    models=LocalModels(root,Path(temp))
     with patch.object(NativeSidebar,'bootstrap'):
         sidebar=NativeSidebar(window,bridge,store,models); window.setCentralWidget(sidebar); window.show(); app.processEvents()
     for identifier in ('math','excel'):store.save_video({'id':identifier,'title':identifier,'url':'vma-course://lesson/'+identifier})
@@ -35,6 +36,10 @@ with tempfile.TemporaryDirectory(prefix='vidence-native-check-') as temp:
     assert sidebar.video_id=='math' and sidebar.question.toPlainText()=='MATH DRAFT'
     sidebar.bridge_event('desktop:presentation',{'collapsed':True}); assert sidebar.body.isHidden() and not sidebar.rail.isHidden()
     sidebar.bridge_event('desktop:presentation',{'collapsed':False}); assert not sidebar.body.isHidden()
+    bridge.mode='local'; bridge.presentation.dock(); app.processEvents(); bridge.presentation.collapse(True); app.processEvents()
+    assert sidebar.width()==48 and sidebar.rail.width()==32 and sidebar.rail.geometry().right()<sidebar.width()
+    bridge.presentation.collapse(False); app.processEvents(); assert sidebar.width()==380 and sidebar.body.isVisible()
+    bridge.presentation.restore(); app.processEvents()
     for locale in ('en','zh-TW','zh-CN'):
         sidebar.ui_language.setCurrentIndex(sidebar.ui_language.findData(locale)); sidebar.change_language(sidebar.ui_language.currentIndex()); app.processEvents()
         assert sidebar.tabs.tabText(0)=={'en':'Ask','zh-TW':'提問','zh-CN':'提问'}[locale]

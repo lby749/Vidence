@@ -32,20 +32,32 @@ def system_library_paths():
 
 def focus_app():
     if os.name != 'nt': return False
-    import ctypes
     from ctypes import wintypes
     api = ctypes.windll.user32
-    api.FindWindowW.argtypes = [wintypes.LPCWSTR, wintypes.LPCWSTR]; api.FindWindowW.restype = wintypes.HWND
     api.ShowWindow.argtypes = [wintypes.HWND, ctypes.c_int]
     api.SetForegroundWindow.argtypes = [wintypes.HWND]
     api.IsIconic.argtypes = [wintypes.HWND]
-    for title in ('Vidence · 学习空间', 'Vidence · 學習空間', 'Vidence · Learning space'):
-        window = api.FindWindowW(None, title)
-        if window:
-            if api.IsIconic(window): api.ShowWindow(window, 9)
-            api.SetForegroundWindow(window)
-            return True
-    return False
+    api.GetWindowTextLengthW.argtypes=[wintypes.HWND]; api.GetWindowTextW.argtypes=[wintypes.HWND,wintypes.LPWSTR,ctypes.c_int]
+    api.GetWindowThreadProcessId.argtypes=[wintypes.HWND,ctypes.POINTER(wintypes.DWORD)]
+    kernel=ctypes.windll.kernel32; kernel.OpenProcess.argtypes=[wintypes.DWORD,wintypes.BOOL,wintypes.DWORD]; kernel.OpenProcess.restype=wintypes.HANDLE
+    kernel.QueryFullProcessImageNameW.argtypes=[wintypes.HANDLE,wintypes.DWORD,wintypes.LPWSTR,ctypes.POINTER(wintypes.DWORD)]; kernel.CloseHandle.argtypes=[wintypes.HANDLE]
+    found=[]; callback_type=ctypes.WINFUNCTYPE(wintypes.BOOL,wintypes.HWND,wintypes.LPARAM)
+    def visit(window,_parameter):
+        title=ctypes.create_unicode_buffer(api.GetWindowTextLengthW(window)+1); api.GetWindowTextW(window,title,len(title))
+        if title.value not in ('Vidence · 学习空间','Vidence · 學習空間','Vidence · Learning space'):return True
+        if FROZEN:
+            process_id=wintypes.DWORD(); api.GetWindowThreadProcessId(window,ctypes.byref(process_id)); process=kernel.OpenProcess(0x1000,False,process_id)
+            if not process:return True
+            path=ctypes.create_unicode_buffer(32768); length=wintypes.DWORD(len(path))
+            try:matches=kernel.QueryFullProcessImageNameW(process,0,path,ctypes.byref(length)) and Path(path.value).resolve()==(APP_DIR/'Vidence.exe').resolve()
+            finally:kernel.CloseHandle(process)
+            if not matches:return True
+        found.append(window); return False
+    callback=callback_type(visit); api.EnumWindows.argtypes=[callback_type,wintypes.LPARAM]; api.EnumWindows(callback,0)
+    if not found:return False
+    window=found[0]
+    if api.IsIconic(window):api.ShowWindow(window,9)
+    api.SetForegroundWindow(window); return True
 
 
 

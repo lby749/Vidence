@@ -1,7 +1,9 @@
 import json
+import io
 from pathlib import Path
 from tempfile import TemporaryDirectory
 import unittest
+from unittest.mock import patch
 from native_store import NativeStore
 from native_agent import NativeAgent, NativeTools
 
@@ -51,6 +53,28 @@ class NativeAgentChecks(unittest.TestCase):
         frame['manualKeep'] = True; self.store.put('keyframes', 'math', frame)
         self.store.set_setting('allowVisionUpload', False)
         self.assertTrue(NativeTools(self.store, 'math', '?', True).execute('get_frame', {'frameId': 'image'})['isError'])
+
+    def test_openai_protocol_returns_all_tool_results_before_the_image_message(self):
+        self.store.set_setting('allowVisionUpload',True); self.store.set_setting('assistant',{'route':'api','baseUrl':'https://example.invalid/v1','model':'fixture-model'})
+        responses=[{'choices':[{'message':{'role':'assistant','content':None,'tool_calls':[{'id':'one','type':'function','function':{'name':'get_frame','arguments':'{"frameId":"image"}'}},{'id':'two','type':'function','function':{'name':'read_evidence','arguments':'{"evidenceIds":["text"]}'}}]}}]}, {'choices':[{'message':{'role':'assistant','content':'done'}}]}]
+        requests=[]
+        def upstream(payload):
+            requests.append(json.loads(payload['body'])); response=io.BytesIO(json.dumps(responses.pop(0)).encode()); response.status=200; return response
+        with patch('native_agent.provider_request',side_effect=upstream):
+            answer=NativeAgent(self.store).complete('question',NativeTools(self.store,'math','question',True))
+        self.assertEqual(answer,'done')
+        self.assertEqual([row['role'] for row in requests[1]['messages'][-3:]],['tool','tool','user'])
+        self.assertEqual(requests[1]['messages'][-1]['content'][1]['image_url']['url'],'data:image/png;base64,aGVsbG8=')
+
+    def test_anthropic_protocol_passes_pixels_as_a_tool_result_image(self):
+        self.store.set_setting('allowVisionUpload',True); self.store.set_setting('assistant',{'route':'api','protocol':'anthropic','baseUrl':'https://example.invalid','model':'fixture-model'})
+        responses=[{'content':[{'type':'tool_use','id':'one','name':'get_frame','input':{'frameId':'image'}}]}, {'content':[{'type':'text','text':'done'}]}]; requests=[]
+        def upstream(payload):
+            self.assertEqual(payload['url'],'https://example.invalid/v1/messages'); requests.append(json.loads(payload['body'])); response=io.BytesIO(json.dumps(responses.pop(0)).encode()); response.status=200; return response
+        with patch('native_agent.provider_request',side_effect=upstream):
+            self.assertEqual(NativeAgent(self.store).complete('question',NativeTools(self.store,'math','question',True)),'done')
+        image=requests[1]['messages'][-1]['content'][0]['content'][1]
+        self.assertEqual(image,{'type':'image','source':{'type':'base64','media_type':'image/png','data':'aGVsbG8='}})
 
 
 if __name__ == '__main__': unittest.main()

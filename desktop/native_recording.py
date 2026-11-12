@@ -4,6 +4,7 @@ import time
 import uuid
 from PySide6.QtCore import QObject, QTimer, Signal
 from PySide6.QtGui import QImage
+from presentation import window_title
 
 
 class Recorder(QObject):
@@ -25,6 +26,7 @@ class Recorder(QObject):
     def start(self, video_id):
         self.stop(); self.video_id = video_id
         self.started = time.monotonic(); self.previous = self.saved = None
+        self.offset=max([row.get('endTime',row.get('time',0)) for kind in ('keyframes','evidence') for row in self.store.rows(kind,video_id)]+[0]) if self.bridge.mode=='window' else 0
         self.last_saved = self.pending = 0
         self.session = uuid.uuid4().hex
         self.store.put('sessions', video_id, {'id': self.session, 'createdAt': int(time.time()*1000)})
@@ -53,6 +55,11 @@ class Recorder(QObject):
         if not video_id: return
         if not self.bridge.current_source or self.bridge.current_source.get('id')!=video_id:
             self.stop(); self.problem.emit('视频来源已改变，已停止旧视频的记录。'); return
+        expected=self.bridge.current_source.get('captureTitle')
+        if expected:
+            current=window_title(self.bridge.target_window)
+            if current is not None and current!=expected:
+                self.stop(); self.problem.emit('课程窗口标题已变化，已停止记录。请重新选择课程，避免混入其他视频。'); return
         if self.bridge.mode == 'local' and not self.bridge.player.isPlaying() and not manual: return
         if self.bridge.capture_error or self.bridge.media_error:
             self.problem.emit(self.bridge.capture_error or self.bridge.media_error); self.stop(); return
@@ -68,7 +75,7 @@ class Recorder(QObject):
             self.ocr_busy=True; self.last_ocr=now
             roi=self.store.setting('ocrRegion',[0,0,1,1])
             text_image=image.copy(int(roi[0]*image.width()),int(roi[1]*image.height()),max(1,int(roi[2]*image.width())),max(1,int(roi[3]*image.height())))
-            stamp=self.bridge.latest_frame_time if self.bridge.mode=='local' else now-self.started
+            stamp=self.bridge.latest_frame_time if self.bridge.mode=='local' else self.offset+now-self.started
             self.ocr_requested.emit(video_id,'',text_image,stamp)
         stable = self.previous is not None and self.difference(signature, self.previous)[0] <= .02 and self.difference(signature, self.previous)[1] <= 97
         self.previous = signature
@@ -83,7 +90,7 @@ class Recorder(QObject):
         original = image.scaledToWidth(3840, Qt.TransformationMode.SmoothTransformation) if image.width() > 3840 else image
         buffer = QBuffer(); buffer.open(QIODevice.OpenModeFlag.WriteOnly); original.save(buffer, 'JPEG', 94)
         identifier = uuid.uuid4().hex
-        stamp = self.bridge.latest_frame_time if self.bridge.mode == 'local' else now-self.started
+        stamp = self.bridge.latest_frame_time if self.bridge.mode == 'local' else self.offset+now-self.started
         self.store.put('keyframes', video_id, {'id': identifier, 'time': stamp, 'timeSource':'media' if self.bridge.mode=='local' else 'recording', 'width': original.width(), 'height': original.height(), 'imageDataUrl': 'data:image/jpeg;base64,'+base64.b64encode(bytes(buffer.data())).decode(), 'createdAt': int(time.time()*1000)})
         self.saved = signature; self.last_saved = now; self.pending = 0
         self.changed.emit()

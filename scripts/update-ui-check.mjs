@@ -11,7 +11,9 @@ const context = await chromium.launchPersistentContext(fs.mkdtempSync(path.join(
   channel: process.env.E2E_BROWSER ?? 'msedge', headless: true, locale: 'zh-CN', viewport: { width: 1100, height: 950 },
   args: [`--load-extension=${extension}`, `--disable-extensions-except=${extension}`, '--disable-gpu', '--no-first-run'],
 });
-let calls = 0, version = '0.1.0-beta.4', status = 200;
+const current = JSON.parse(fs.readFileSync('package.json', 'utf8')).version;
+const [major, minor] = current.split('.').map(Number);
+let calls = 0, version = `${major}.${minor + 1}.0-beta.1`, status = 200;
 const report = { scope: 'isolated-browser-release-feed-fixture', liveReleaseClaim: false };
 try {
   await context.route('https://api.github.com/repos/lby749/Vidence/releases?*', route => {
@@ -28,7 +30,7 @@ try {
   assert.equal(await page.locator('.app-update-banner').count(), 0); assert.equal(calls, 1);
   await page.getByRole('button', { name: '设置', exact: true }).click();
   const card = page.locator('.app-update-card');
-  version = '0.1.0-beta.10';
+  version = `${major}.${minor + 2}.0-beta.1`;
   await card.getByRole('button', { name: '检查更新', exact: true }).click();
   await card.getByText(version, { exact: true }).waitFor(); assert.equal(calls, 2);
   await card.getByText('更新说明', { exact: true }).click();
