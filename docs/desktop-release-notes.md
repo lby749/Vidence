@@ -2,6 +2,8 @@
 
 Vidence 是 AI 视频学习助手，帮助你边看视频边提问、整理重点，并分别保存每个视频的笔记和长期记忆，以后继续查找和复习。
 
+<p align="center"><img src="https://raw.githubusercontent.com/lby749/Vidence/main/assets/brand/project-cover.png" width="360" alt="Vidence 项目配图：连接知识的星空"/></p>
+
 ## 下载与使用
 
 下载本页 Assets 中的 **Vidence-Desktop-Windows-x64.zip**，完整解压，双击 **一键启动.exe**。支持 Windows 10 / 11 x64，无需安装 Python、Node.js 或开发工具。可用旁边的 `.sha256` 文件核对下载完整性。
@@ -33,7 +35,7 @@ Vidence 是 AI 视频学习助手，帮助你边看视频边提问、整理重�
 
 ## 验证与边界
 
-发布前进行源码检查、隔离数据测试、实际原生窗口的播放及侧栏操作测试，以及云端构建和另一台 Windows runner 的冻结成品检查。成品检查限制 PATH，使系统 Python / Node.js 不可用；这不是物理空白 Windows 或全部硬件的证明。详细记录见[验证说明](verification.md)。
+发布前进行源码检查、隔离数据测试、实际原生窗口的播放及侧栏操作测试，以及云端构建和另一台 Windows runner 的冻结成品检查。成品检查限制 PATH，使系统 Python / Node.js 不可用；这不是物理空白 Windows 或全部硬件的证明。详细记录见[验证说明](https://github.com/lby749/Vidence/blob/main/docs/verification.md)。
 
 系统 OCR 可能误识小字和公式，AI 笔记也可能出错；重要内容请核对原图。受保护课程、网页全屏、不同账号和采集权限须按实际平台验证。桌面版暂未迁移 Notion 同步、AI 网页渠道和浏览器字幕适配；原浏览器资料不会自动合并。Android、TTS、听视频 ASR 尚未实现，iPhone 暂缓；AMD / Apple 实机尚未验收。
 

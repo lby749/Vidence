@@ -1,0 +1,24 @@
+name: Sync desktop release notes
+on:
+  push:
+    branches: [main]
+    paths: ['docs/desktop-release-notes.md']
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  notes:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          persist-credentials: false
+      - name: Update existing desktop release description only
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          tag=$(python -c "import runpy;v=runpy.run_path('desktop/app_version.py');print(v['TAG_PREFIX']+v['VERSION'])")
+          gh release view "$tag" >/dev/null
+          gh release edit "$tag" --notes-file docs/desktop-release-notes.md
