@@ -18,7 +18,7 @@ Vidence 是一款 AI 视频学习助手。看网课、教程或知识视频时�
 | **[Windows 安装引导 EXE](https://github.com/lby749/Vidence/releases/download/v0.4.1/Vidence-Extension-Setup-Windows.exe)**（推荐 Windows 10 / 11） | 直接双击，选择浏览器，点击安装并打开浏览器；无需解压、CMD 或开发工具 |
 | **[纯插件 ZIP](https://github.com/lby749/Vidence/releases/download/v0.4.1/Vidence-Browser-Extension.zip)** | 完整解压，在扩展管理页加载包含 `manifest.json` 的文件夹；适合手动安装和 macOS / Linux |
 
-首次使用仍需在浏览器开启开发者模式，确认“加载已解压的扩展”。EXE 会提供文件夹路径并打开安装页，不能代替浏览器内的确认。详见[插件安装说明](docs/browser-extension.md)。
+安装浏览器插件时，首次仍需在浏览器开启开发者模式，确认“加载已解压的扩展”。插件 EXE 会提供文件夹路径并打开安装页，不能代替浏览器内的确认。详见[插件安装说明](docs/browser-extension.md)。
 
 桌面版与插件**都不附带浏览器内核和模型权重**，无需安装 Python / Node.js。桌面主界面、播放器和学习栏使用 Qt 原生控件；插件直接使用已有浏览器。纯插件 ZIP 不含 EXE、CMD 或 PowerShell。可选离线模型由用户按需要选择下载。详见[桌面版使用说明](docs/native-desktop.md)。
 
@@ -35,6 +35,10 @@ Vidence 是一款 AI 视频学习助手。看网课、教程或知识视频时�
 跟着网课复习、学习软件操作，或观看知识科普视频时，都可以把 Vidence 放在旁边使用。
 
 ## 开始使用
+
+**原生桌面版：**完整解压后双击“一键启动.exe”，在右侧来源面板打开本地视频或关联课程窗口，到设置连接自己的 AI，然后开始记录和提问。详见[桌面版步骤](docs/native-desktop.md)。
+
+**浏览器插件：**
 
 1. 选择 EXE 引导或纯插件 ZIP 安装，打开想学习的视频网页。点击视频旁的 Vidence 按钮，再打开右侧学习栏。
 2. 在“配置 API”粘贴自己的 API Key，获取可用模型并测试连接；也可以自行选择模型。

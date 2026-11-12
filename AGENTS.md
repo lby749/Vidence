@@ -30,6 +30,8 @@ npm test
 npm run build
 python -m unittest discover -s desktop -p "test_*.py"
 python scripts/native-ui-check.py
+python scripts/native-api-setup-check.py
+python scripts/player-controls-check.py --offscreen
 node scripts/update-ui-check.mjs
 ```
 
