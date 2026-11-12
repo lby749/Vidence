@@ -172,6 +172,14 @@ class Journey:
     def run(self,window):
         self.window=window;self.sidebar=window.sidebar;self.store=self.sidebar.store;self.bridge=window.native;self.ids=[]
         self.bridge.audio.setMuted(True);self.save()
+        # Trace real model output in this isolated test only. Calls and answers
+        # still come from the unchanged NativeAgent and real HTTP service.
+        complete=NativeAgent.complete
+        def traced_complete(agent,prompt,executor=None):
+            answer=complete(agent,prompt,executor)
+            self.result.setdefault('modelResponses',[]).append({'toolsEnabled':executor is not None,'toolCalls':executor.calls if executor else 0,'images':executor.images if executor else 0,'answer':answer[:5000]})
+            self.save();return answer
+        NativeAgent.complete=traced_complete
         try:
             if self.plan['phase']=='record':
                 self.step('native API model discovery',lambda:self.discover())
@@ -182,7 +190,7 @@ class Journey:
             else:self.step('restarted application reads and uses persisted learning data',self.restart)
             self.result['passed']=True
         except Exception as error:self.result['error']=str(error)[:2000];self.result['traceback']=traceback.format_exc()[-5000:]
-        finally:self.result['terminal']=True;self.save();window.close();QApplication.exit(0 if self.result['passed'] else 1)
+        finally:NativeAgent.complete=complete;self.result['terminal']=True;self.save();window.close();QApplication.exit(0 if self.result['passed'] else 1)
 
     def discover(self):
         self.sidebar.discover();self.wait(lambda:self.sidebar.quick_model.currentData()==self.plan['model'])
