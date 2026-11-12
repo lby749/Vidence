@@ -1,7 +1,15 @@
 """仅转发用户选定的 AI 接口；凭据不跟随跨站重定向。"""
 import urllib.request
 import urllib.error
-from urllib.parse import urlsplit
+from urllib.parse import urlsplit, urlunsplit
+
+
+def api_base(value, anthropic=False):
+    parsed=urlsplit(value.strip()); path=parsed.path.rstrip('/')
+    for ending in ('/chat/completions','/messages','/models'):
+        if path.endswith(ending):path=path[:-len(ending)]; break
+    if anthropic and not path.endswith('/v1'):path+='/v1'
+    return urlunsplit((parsed.scheme,parsed.netloc,path,'',''))
 
 
 class NoRedirect(urllib.request.HTTPRedirectHandler):

@@ -1,10 +1,16 @@
 import threading
 import unittest
 from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
-from provider_proxy import provider_request
+from provider_proxy import api_base, provider_request
 
 
 class ProxyChecks(unittest.TestCase):
+    def test_api_endpoint_normalization(self):
+        self.assertEqual(api_base('https://example.com/v1/chat/completions?ignored=1'), 'https://example.com/v1')
+        self.assertEqual(api_base('https://example.com/v1/models/'), 'https://example.com/v1')
+        self.assertEqual(api_base('https://example.com', True), 'https://example.com/v1')
+        self.assertEqual(api_base('https://example.com/v1/messages', True), 'https://example.com/v1')
+
     def test_no_remote_plaintext_or_url_credentials(self):
         for address in ['http://example.com/v1/models', 'https://user:secret@example.com/v1/models', 'https://example.com/files']:
             with self.assertRaises(ValueError): provider_request({'url': address})

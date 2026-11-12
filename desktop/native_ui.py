@@ -11,11 +11,12 @@ from PySide6.QtGui import QDesktopServices, QPixmap
 from PySide6.QtWidgets import (QApplication, QCheckBox, QComboBox, QDialog, QDialogButtonBox,
     QFileDialog, QFormLayout, QFrame, QHBoxLayout, QInputDialog, QLabel, QLineEdit,
     QListWidget, QListWidgetItem, QMessageBox, QPushButton, QScrollArea, QSpinBox,
-    QTabWidget, QTextBrowser, QTextEdit, QVBoxLayout, QWidget)
+    QTabWidget, QTextBrowser, QTextEdit, QVBoxLayout, QWidget, QMenu)
 from native_agent import NativeAgent
 from native_recording import Recorder
 from native_media import ROOT
 from native_updates import check_updates
+from app_version import VERSION
 from ui_locale import ui_text
 
 
@@ -82,7 +83,8 @@ class NativeSidebar(QWidget):
         layout = QVBoxLayout(self.body); layout.setContentsMargins(0,0,0,0); layout.setSpacing(12)
         header = QHBoxLayout(); logo = QLabel(); logo.setPixmap(QPixmap(str(ROOT/'public/brand/icon-128.png')).scaled(28,28,Qt.AspectRatioMode.KeepAspectRatio,Qt.TransformationMode.SmoothTransformation)); header.addWidget(logo)
         brand = QLabel('Vidence'); brand.setObjectName('brand'); header.addWidget(brand); header.addStretch()
-        self.collapse = button('‹', self.toggle_collapse); self.collapse.setToolTip('收起学习栏'); header.addWidget(self.collapse); layout.addLayout(header)
+        self.collapse = button('‹', self.toggle_collapse); self.collapse.setToolTip('收起学习栏'); header.addWidget(self.collapse)
+        self.close_sidebar_button=button('×',self.close_sidebar); self.close_sidebar_button.setAccessibleName('关闭学习栏'); self.close_sidebar_button.setToolTip('关闭学习栏并停止记录，视频继续播放'); header.addWidget(self.close_sidebar_button); layout.addLayout(header)
         self.title = QLabel('把看过的，变成自己的。'); self.title.setWordWrap(True); self.title.setStyleSheet('font-size:17px;font-weight:600;'); layout.addWidget(self.title)
         self.title.setProperty('userContent',True)
         self.source_toggle = button('打开视频或课程  ▾', lambda: self.source_panel.setVisible(not self.source_panel.isVisible())); layout.addWidget(self.source_toggle)
@@ -101,6 +103,14 @@ class NativeSidebar(QWidget):
         self.status = QLabel('打开一个视频，开始学习。'); self.status.setObjectName('muted'); self.status.setWordWrap(True); layout.addWidget(self.status)
         self.tabs = QTabWidget(); layout.addWidget(self.tabs, 1)
         self.chat_page(); self.notes_page(); self.memory_page(); self.library_page(); self.settings_page()
+        self.quick_model.setModel(self.model.model()); self.quick_model.setCurrentIndex(self.model.currentIndex())
+        self.model.currentIndexChanged.connect(self.quick_model.setCurrentIndex)
+        self.quick_model.currentIndexChanged.connect(self.model.setCurrentIndex)
+        self.model.editTextChanged.connect(self.quick_model.setEditText); self.quick_model.editTextChanged.connect(self.model.setEditText)
+        self.quick_model.activated.connect(lambda _index:self.save_settings())
+        self.quick_model.lineEdit().returnPressed.connect(self.save_settings)
+        for control in (self.route,self.backend,self.api_service):control.currentIndexChanged.connect(self.assistant_label)
+        self.assistant_label()
         bridge.changed.connect(self.bridge_event)
         self.record_changed(); self.refresh_library()
         self.apply_language()
@@ -138,7 +148,7 @@ class NativeSidebar(QWidget):
             if value.get('error'):
                 self.set_status(value['error'])
                 if value.get('existingBridge'):self.existing_panel.show()
-            else:self.token=value['token']
+            else:self.token=value['token']; self.discover()
         job=self.start_job(connect,done)
         job.failed.connect(lambda error:setattr(self,'bootstrapping',False))
 
@@ -151,6 +161,9 @@ class NativeSidebar(QWidget):
         if self.bridge.presentation.docked or self.bridge.presentation.target: self.bridge.collapseSidebar(True)
         else: self.source_panel.setVisible(not self.source_panel.isVisible())
 
+    def close_sidebar(self):
+        self.bridge.hideSidebar()
+
     def attach_sidebar(self):
         if self.video_id and (not self.bridge.current_source or self.bridge.current_source['id'] != self.video_id):
             video = self.store.video(self.video_id)
@@ -162,7 +175,12 @@ class NativeSidebar(QWidget):
         if result.get('error'): self.set_status(result['error'])
 
     def bridge_event(self, name, value):
-        if name == 'desktop:presentation':
+        if name=='desktop:sidebar-hidden':
+            self.recorder.stop()
+            if self.ai_job:self.ai_job.cancel.set()
+            if self.video_id:self.store.set_setting('draft:'+self.video_id,self.question.toPlainText())
+            if self.bridge.mode=='window':self.bridge.capture.stop()
+        elif name == 'desktop:presentation':
             collapsed=bool(value.get('collapsed'))
             self.body.setVisible(not collapsed); self.rail.setVisible(collapsed); self.root_layout.setContentsMargins(8,8,8,8) if collapsed else self.root_layout.setContentsMargins(14,16,14,14)
         elif name == 'desktop:source-changed': self.select_source(value)
@@ -193,7 +211,7 @@ class NativeSidebar(QWidget):
         if not file: return
         source = json.loads(self.bridge.load_video(file))
         if source.get('error'): self.set_status(source['error']); return
-        self.select_source(source); self.window.resize(1280,800); self.bridge.presentation.attach()
+        self.select_source(source); self.bridge.presentation.attach()
 
     def open_web(self):
         if not self.address.text().strip(): return
@@ -230,6 +248,7 @@ class NativeSidebar(QWidget):
     def toggle_record(self):
         if self.recorder.video_id: self.recorder.stop(); self.set_status('已停止记录，已有资料保留。')
         elif self.video_id and self.bridge.current_source and self.bridge.current_source['id'] == self.video_id:
+            if self.bridge.mode=='window' and not self.bridge.capture.isActive():self.bridge.resumeCapture()
             self.recorder.start(self.video_id); self.set_status('正在本机记录变化画面；播放保持原始分辨率和帧率。')
         else: self.set_status('请先打开或关联这个视频。')
 
@@ -244,6 +263,12 @@ class NativeSidebar(QWidget):
 
     def chat_page(self):
         widget, layout = page(); self.tabs.addTab(widget, '提问')
+        tools=QHBoxLayout(); self.quick_assistant=QPushButton('AI 助手'); self.quick_assistant.setAccessibleName('切换 AI 助手'); self.quick_assistant.setProperty('userContent',True)
+        self.assistant_menu=QMenu(self.quick_assistant); self.quick_assistant.setMenu(self.assistant_menu); self.assistant_menu.aboutToShow.connect(self.assistant_options)
+        self.quick_model=QComboBox(); self.quick_model.setEditable(True); self.quick_model.setMaxVisibleItems(10); self.quick_model.setMinimumContentsLength(6)
+        self.quick_model.setSizeAdjustPolicy(QComboBox.SizeAdjustPolicy.AdjustToMinimumContentsLengthWithIcon); self.quick_model.setAccessibleName('当前问答模型')
+        self.quick_model.lineEdit().setPlaceholderText('选择或搜索模型'); self.quick_model.completer().setFilterMode(Qt.MatchFlag.MatchContains); self.quick_model.completer().setCaseSensitivity(Qt.CaseSensitivity.CaseInsensitive)
+        tools.addWidget(self.quick_assistant); tools.addWidget(self.quick_model,1); layout.addLayout(tools)
         self.scope=QComboBox(); self.scope.addItem('整个视频',None); layout.addWidget(self.scope)
         self.chat = SafeText(); layout.addWidget(self.chat,1)
         self.references = QListWidget(); self.references.setMaximumHeight(85); self.references.hide(); self.references.itemActivated.connect(self.show_reference); layout.addWidget(self.references)
@@ -251,6 +276,27 @@ class NativeSidebar(QWidget):
         row = QHBoxLayout(); self.allow_images = QCheckBox('本次允许读图'); row.addWidget(self.allow_images); row.addStretch()
         self.cancel_button = button('取消', lambda: self.ai_job.cancel.set() if self.ai_job else None); self.cancel_button.hide(); row.addWidget(self.cancel_button)
         self.send = button('发送', self.ask, True); row.addWidget(self.send); layout.addLayout(row)
+
+    def assistant_label(self):
+        self.quick_assistant.setText(self.api_service.currentText() if self.route.currentData()=='api' else self.backend.currentText())
+
+    def assistant_options(self):
+        self.assistant_menu.clear()
+        api=self.assistant_menu.addAction('API Key'); api.setCheckable(True); api.setChecked(self.route.currentData()=='api'); api.triggered.connect(lambda:self.switch_assistant('api'))
+        for index in range(self.backend.count()):
+            backend=self.backend.itemData(index); action=self.assistant_menu.addAction(self.backend.itemText(index)); action.setCheckable(True)
+            action.setChecked(self.route.currentData()=='local-agent' and self.backend.currentData()==backend)
+            action.triggered.connect(lambda _checked=False,value=backend:self.switch_assistant('local-agent',value))
+        self.assistant_menu.addSeparator(); self.assistant_menu.addAction(ui_text('连接设置',self.store.setting('uiLanguage','zh-CN')),lambda:self.tabs.setCurrentIndex(4))
+
+    def switch_assistant(self,route,backend=None):
+        if self.ai_job:self.set_status('请先等待或取消当前请求。'); return
+        self.route.setCurrentIndex(self.route.findData(route))
+        if backend is not None:self.backend.setCurrentIndex(self.backend.findData(backend))
+        self.save_settings(); self.assistant_label()
+        if route=='api' and not self.api_key.text().strip():self.tabs.setCurrentIndex(4); self.set_status('请先用 API Key 连接服务。'); return
+        if route=='local-agent' and not self.token:self.bootstrap(); return
+        self.discover()
 
     def ask(self):
         if not self.video_id: self.set_status('请先选择一个视频。'); return
@@ -438,7 +484,7 @@ class NativeSidebar(QWidget):
         layout.addWidget(button('检查应用更新',lambda:self.check_updates(True)))
         self.update_download=button('下载新版 / 查看全部版本',lambda:QDesktopServices.openUrl(QUrl('https://github.com/lby749/Vidence/releases'))); layout.addWidget(self.update_download)
         layout.addWidget(button('反馈问题或建议',lambda:QDesktopServices.openUrl(QUrl('https://github.com/lby749/Vidence/issues/new/choose'))))
-        note=QLabel('BETA 测试版还不够完善，欢迎提出建议。\n感谢您的支持，如果有帮助的话，请点一个 STAR，谢谢！'); note.setWordWrap(True); note.setObjectName('muted'); layout.addWidget(note); layout.addStretch()
+        note=QLabel('项目还在持续完善，欢迎提出建议。\n感谢您的支持，如果有帮助的话，请点一个 STAR，谢谢！'); note.setWordWrap(True); note.setObjectName('muted'); layout.addWidget(note); layout.addStretch()
         config=self.store.setting('assistant',{})
         self.api_service.setCurrentIndex(max(0,next((index for index in range(self.api_service.count()) if self.api_service.itemData(index)[0]==config.get('service','custom')),0))); self.protocol.setCurrentIndex(max(0,self.protocol.findData(config.get('protocol','openai'))))
         self.route.setCurrentIndex(max(0,self.route.findData(config.get('route','local-agent')))); self.backend.setCurrentIndex(max(0,self.backend.findData(config.get('backend','opencode-go')))); self.base_url.setText(config.get('baseUrl','')); self.api_key.setText(config.get('apiKey','')); self.model.setCurrentText(config.get('model','deepseek-v4.1-flash')); self.vision.setChecked(self.store.setting('allowVisionUpload',False)); self.ocr_enabled.setChecked(self.store.setting('ocrEnabled',False))
@@ -478,12 +524,16 @@ class NativeSidebar(QWidget):
 
     def discover(self):
         self.save_settings()
+        selected=self.store.setting('assistant',{}).get('model','')
+        connection=(self.route.currentData(),self.backend.currentData(),self.base_url.text(),self.protocol.currentData())
         def done(values):
-            selected=self.model.currentText(); self.model.clear()
+            if connection!=(self.route.currentData(),self.backend.currentData(),self.base_url.text(),self.protocol.currentData()):return
+            if not values:self.set_status('没有找到可用聊天模型，可以手动填写模型标识。'); return
+            self.model.clear()
             for value in values:self.model.addItem(value.get('label',value['id']),value['id'])
             # 下拉显示可读名称，保存实际模型标识。
             self.model.setCurrentIndex(max(0,self.model.findData(selected)))
-            self.set_status(f'连接成功，找到 {len(values)} 个可用模型。选择后保存即可。')
+            self.save_settings(); self.set_status(f'连接成功，找到 {len(values)} 个可用模型。可以在提问栏直接选择。')
         self.start_job(lambda job:self.agent(job).models(),done,True)
 
     def download_models(self):
@@ -526,13 +576,14 @@ class NativeSidebar(QWidget):
             rows.sort(key=lambda row:order.index(row[1][0] if isinstance(row[1],tuple) else row[1])); combo.blockSignals(True); combo.clear()
             for label,value in rows:combo.addItem(label,value)
             combo.setCurrentIndex(max(0,combo.findData(selected))); combo.blockSignals(False)
+        self.assistant_label()
 
     def set_auto_updates(self,enabled):
         saved=self.store.setting('appUpdates',{}); saved['auto']=enabled; self.store.set_setting('appUpdates',saved)
 
     def check_updates(self,force=False):
         if not force and not self.auto_updates.isChecked():return
-        current=json.loads((ROOT/'package.json').read_text(encoding='utf8'))['version']
+        current=VERSION
         def done(result):
             if result.get('error'):
                 if force:self.set_status(result['error'])

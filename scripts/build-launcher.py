@@ -17,7 +17,7 @@ subprocess.run([sys.executable,'-m','PyInstaller','--noconfirm','--distpath',str
 shutil.copy2(work/'build/launcher/一键启动.exe',output/'一键启动.exe')
 for source,name in [(root/'LICENSE','LICENSE.txt'),(root/'docs/licenses.md','第三方声明.md'),(root/'public/brand/app.ico','应用图标.ico')]:shutil.copy2(source,output/name)
 (output/'启动Vidence.cmd').write_bytes('@echo off\r\nchcp 65001 >nul\r\nstart "" "%~dp0一键启动.exe" --open\r\n'.encode('utf8'))
-(output/'使用说明.txt').write_text('''Vidence · 原生桌面 BETA 测试版
+(output/'使用说明.txt').write_text('''Vidence · 原生桌面版
 
 Vidence 帮你边看视频边提问、整理重点，并分别保存每个视频的学习记忆。
 
@@ -31,7 +31,7 @@ Vidence 帮你边看视频边提问、整理重点，并分别保存每个视频
 6. 模型权重按需下载，发行包不含模型、课程、登录态或用户学习资料。
 7. 旧版学习数据库保留在原位置。本版原生数据使用 SQLite；旧版导出文件可从视频库导入。
 
-这是 BETA 测试版，还不够完善。建议和问题欢迎提交到项目 Issues，非常感谢！
+当前项目仍在持续完善。建议和问题欢迎提交到项目 Issues，非常感谢！
 感谢您的支持，如果有帮助的话，请点一个 STAR，谢谢！
 ''',encoding='utf8')
 report={'output':str(output),'requiresSystemPython':False,'requiresSystemNode':False,'browserExtensionBundled':False,'browserKernelBundled':False,'desktopUi':'Qt Widgets'}

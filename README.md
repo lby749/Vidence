@@ -10,16 +10,17 @@ Vidence 是一款 AI 视频学习助手。看网课、教程或知识视频时�
 
 **[打开下载与版本页面](https://github.com/lby749/Vidence/releases)**
 
-当前版本 **0.4.1**。桌面 Chrome / Microsoft Edge 插件提供两种下载，选一种即可：
+原生桌面与浏览器插件分别下载。桌面版使用原生播放器和右侧学习栏，插件配合已有 Chrome / Microsoft Edge 使用。
 
 | 下载 | 怎么使用 |
 | --- | --- |
+| **[Windows 原生桌面版 0.4.2](https://github.com/lby749/Vidence/releases/download/desktop-v0.4.2/Vidence-Desktop-Windows-x64.zip)** | 完整解压，双击“一键启动.exe”；播放本地视频，或把学习栏靠在已经打开的课程窗口旁 |
 | **[Windows 安装引导 EXE](https://github.com/lby749/Vidence/releases/download/v0.4.1/Vidence-Extension-Setup-Windows.exe)**（推荐 Windows 10 / 11） | 直接双击，选择浏览器，点击安装并打开浏览器；无需解压、CMD 或开发工具 |
 | **[纯插件 ZIP](https://github.com/lby749/Vidence/releases/download/v0.4.1/Vidence-Browser-Extension.zip)** | 完整解压，在扩展管理页加载包含 `manifest.json` 的文件夹；适合手动安装和 macOS / Linux |
 
 首次使用仍需在浏览器开启开发者模式，确认“加载已解压的扩展”。EXE 会提供文件夹路径并打开安装页，不能代替浏览器内的确认。详见[插件安装说明](docs/browser-extension.md)。
 
-两种下载包含同一套插件，**不附带浏览器内核、桌面应用或模型权重**，不需要安装 Python / Node.js。纯插件 ZIP 不含 EXE、CMD 或 PowerShell。可选离线功能的模型由用户选择档位后下载。独立原生桌面版正在完善，不在本次发布中。
+桌面版与插件**都不附带浏览器内核和模型权重**，无需安装 Python / Node.js。桌面主界面、播放器和学习栏使用 Qt 原生控件；插件直接使用已有浏览器。纯插件 ZIP 不含 EXE、CMD 或 PowerShell。可选离线模型由用户按需要选择下载。详见[桌面版使用说明](docs/native-desktop.md)。
 
 <p align="center"><img src="assets/brand/project-cover.png" width="360" alt="项目配图：连接知识的星空"/></p>
 
@@ -46,7 +47,7 @@ API 问答不依赖桌面程序。本机 OpenCode Go / DSH 等智能体属于可
 
 ## 反馈与建议
 
-当前版本为 **0.4.1**，仍在持续完善。如果遇到问题，或有什么改进建议，欢迎通过[问题反馈与建议](https://github.com/lby749/Vidence/issues/new/choose)提出，非常感谢！
+当前桌面版为 **0.4.2**，浏览器插件为 **0.4.1**，仍在持续完善。如果遇到问题，或有什么改进建议，欢迎通过[问题反馈与建议](https://github.com/lby749/Vidence/issues/new/choose)提出，非常感谢！
 
 应用内也可以在“设置 → 应用更新”点击“反馈问题或建议”。
 

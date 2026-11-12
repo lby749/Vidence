@@ -1,5 +1,6 @@
 """原生界面的问答与资料工具；只读取当前视频、范围和本次授权的截图。"""
 import json
+import re
 import http.client
 import hashlib
 import math
@@ -10,7 +11,7 @@ import urllib.request
 from urllib.parse import urlencode
 import uuid
 
-from provider_proxy import provider_request
+from provider_proxy import provider_request, api_base
 
 
 TOOL_NAMES = ('get_question', 'search_library', 'read_evidence', 'get_timeline', 'get_neighbors', 'get_frame')
@@ -163,8 +164,7 @@ class NativeAgent:
         if config.get('route', 'local-agent') == 'local-agent': return self.bridge('/models?'+urlencode({'backend': config.get('backend', 'opencode-go')}))['models']
         anthropic=config.get('protocol')=='anthropic'
         headers = {'x-api-key':config.get('apiKey',''),'anthropic-version':'2023-06-01'} if anthropic else {'Authorization': 'Bearer '+config.get('apiKey', '')}
-        base=config.get('baseUrl','').rstrip('/')
-        if anthropic and not base.endswith('/v1'):base+='/v1'
+        base=api_base(config.get('baseUrl',''),anthropic)
         found={}; after=''
         for _ in range(20):
             payload = {'url': base+'/models'+('?'+urlencode({'after_id':after}) if after else ''), 'headers': headers}
@@ -174,7 +174,7 @@ class NativeAgent:
             rows=result.get('data',result.get('models'))
             if not isinstance(rows,list):raise ValueError('服务没有返回可识别的模型目录')
             for item in rows:
-                if isinstance(item,dict) and isinstance(item.get('id'),str):found[item['id']]={'id':item['id'],'label':item.get('display_name',item.get('name',item['id']))}
+                if isinstance(item,dict) and isinstance(item.get('id'),str) and not re.search(r'embed|rerank|whisper|tts|transcrib|^dall-e|^gpt-image',item['id'],re.I):found[item['id']]={'id':item['id'],'label':item.get('display_name',item.get('name',item['id']))}
             if not anthropic or not result.get('has_more'):break
             cursor=result.get('last_id') or (rows[-1].get('id') if rows else '')
             if not cursor or cursor==after:raise ValueError('模型目录分页无效，请手动填写模型标识')
@@ -216,7 +216,7 @@ class NativeAgent:
             if self.cancel.is_set(): raise RuntimeError('已取消')
             body = {'model': config.get('model', ''), 'messages': messages, 'stream': False}
             if executor: body['tools'] = [{'type': 'function', 'function': {'name': tool['name'], 'description': tool['description'], 'parameters': tool['inputSchema']}} for tool in TOOLS]
-            with provider_request({'url': config.get('baseUrl', '').rstrip('/')+'/chat/completions', 'method': 'POST', 'headers': {'Authorization': 'Bearer '+config.get('apiKey', ''), 'Content-Type': 'application/json'}, 'body': json.dumps(body)}) as response:
+            with provider_request({'url': api_base(config.get('baseUrl', ''))+'/chat/completions', 'method': 'POST', 'headers': {'Authorization': 'Bearer '+config.get('apiKey', ''), 'Content-Type': 'application/json'}, 'body': json.dumps(body)}) as response:
                 if response.status != 200: raise RuntimeError(f'AI 接口返回错误（{response.status}）')
                 data = json.load(response)
             self.usage.append(data.get('usage'))
@@ -236,8 +236,7 @@ class NativeAgent:
         raise RuntimeError('已达到本次问答轮数上限')
 
     def complete_anthropic(self,prompt,executor,config):
-        base=config.get('baseUrl','').rstrip('/')
-        if not base.endswith('/v1'):base+='/v1'
+        base=api_base(config.get('baseUrl',''),True)
         messages=[{'role':'user','content':prompt}]
         for _ in range(6):
             if self.cancel.is_set():raise RuntimeError('已取消')

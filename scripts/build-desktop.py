@@ -6,6 +6,7 @@ import os
 import shutil
 import subprocess
 import sys
+import runpy
 import pefile
 from PySide6.QtCore import QLibraryInfo
 
@@ -59,7 +60,7 @@ assert not (output / '_internal/.output').exists(), '桌面包不应捆绑浏览
 subprocess.run([sys.executable, str(root / 'scripts/build-launcher.py'), str(output)], cwd=root, check=True)
 subprocess.run([sys.executable, str(root / 'scripts/prepare-notices.py'), str(output)], cwd=root, check=True)
 assert source_hashes()==before,'构建期间源码发生变化，本包不能用于最终验收或发布'
-(output/'_internal/build-info.json').write_text(json.dumps({'version':json.loads((root/'package.json').read_text(encoding='utf8'))['version'],'sourceHashes':before},indent=2),encoding='utf8')
+(output/'_internal/build-info.json').write_text(json.dumps({'version':runpy.run_path(str(root/'desktop/app_version.py'))['VERSION'],'sourceHashes':before},indent=2),encoding='utf8')
 report = {'output': str(output), 'bytes': sum(file.stat().st_size for file in output.rglob('*') if file.is_file()), 'bundledModelWeights': 0}
 (root / 'artifacts/desktop-package.json').write_text(json.dumps(report, ensure_ascii=False, indent=2), encoding='utf-8')
 print(json.dumps(report, ensure_ascii=True))

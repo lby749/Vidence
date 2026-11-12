@@ -2,10 +2,10 @@
 import ctypes
 from ctypes import wintypes
 import os
-from PySide6.QtCore import QObject, QRect, Qt, QTimer, QEvent
-from PySide6.QtGui import QShortcut, QKeySequence
+from PySide6.QtCore import QObject, QRect, QPoint, Qt, QTimer, QEvent
+from PySide6.QtGui import QShortcut, QKeySequence, QCursor, QColor, QPainter, QPen
 from PySide6.QtMultimediaWidgets import QVideoWidget
-from PySide6.QtWidgets import QApplication, QWidget, QMainWindow, QPushButton, QSlider, QLabel, QHBoxLayout, QVBoxLayout, QStackedLayout
+from PySide6.QtWidgets import QApplication, QWidget, QMainWindow, QPushButton, QSlider, QLabel, QHBoxLayout, QVBoxLayout
 
 
 def find_window(title):
@@ -60,11 +60,29 @@ def window_bounds(identifier):
     return QRect(round(screen.geometry().x() + (rect.left - info.rcMonitor.left) / ratio), round(screen.geometry().y() + (rect.top - info.rcMonitor.top) / ratio), round((rect.right - rect.left) / ratio), round((rect.bottom - rect.top) / ratio))
 
 
+class PlaybackControls(QWidget):
+    def __init__(self,player):
+        super().__init__(player,Qt.WindowType.Tool|Qt.WindowType.FramelessWindowHint); self.player=player
+        self.setAttribute(Qt.WidgetAttribute.WA_ShowWithoutActivating,True)
+        self.setAttribute(Qt.WidgetAttribute.WA_TranslucentBackground,True)
+
+    def paintEvent(self,event):
+        painter=QPainter(self); painter.setRenderHint(QPainter.RenderHint.Antialiasing)
+        painter.setBrush(QColor(24,26,32,238)); painter.setPen(QPen(QColor(60,64,75,240)))
+        painter.drawRoundedRect(self.rect().adjusted(0,0,-1,-1),14,14)
+
+    def keyPressEvent(self,event):
+        if event.key()==Qt.Key.Key_Escape and self.player.host_window().isFullScreen():self.player.set_fullscreen(False); event.accept()
+        elif event.key()==Qt.Key.Key_F11:self.player.toggle_fullscreen(); event.accept()
+        else:super().keyPressEvent(event)
+
+
 class PlayerWindow(QMainWindow):
     def __init__(self, controller, bridge):
         super().__init__()
         self.controller, self.bridge = controller, bridge
         self.before_fullscreen_collapsed = False
+        self.controls_hidden=False; self.closing=False
         self.setWindowTitle(bridge.ui_text('视频播放 · Vidence'))
         self.resize(1100, 720)
         self.surface = QVideoWidget()
@@ -90,18 +108,18 @@ class PlayerWindow(QMainWindow):
         self.fullscreen_button = QPushButton('全屏')
         self.fullscreen_button.clicked.connect(self.toggle_fullscreen)
         self.sidebar = QPushButton(bridge.ui_text('学习侧栏'))
-        self.sidebar.clicked.connect(lambda: controller.collapse(not controller.collapsed) if controller.docked or controller.target == int(self.winId()) else controller.attach(int(self.winId())))
+        self.sidebar.clicked.connect(controller.toggle_sidebar)
         bar = QHBoxLayout()
         for widget in [self.play, self.seek, self.clock, self.mute, self.volume, self.sidebar, self.fullscreen_button]: bar.addWidget(widget)
-        self.controls = QWidget(); self.controls.setObjectName('playbackControls'); self.controls.setLayout(bar)
-        # 控件浮在视频底部，不挤占全屏画面；容器空白区域不拦截视频点击。
-        overlay = QWidget(); overlay_layout = QVBoxLayout(overlay); overlay_layout.setContentsMargins(16, 0, 16, 16); overlay_layout.addStretch(); overlay_layout.addWidget(self.controls)
-        layout = QStackedLayout(); layout.setStackingMode(QStackedLayout.StackingMode.StackAll); layout.addWidget(self.surface); layout.addWidget(overlay); layout.setCurrentWidget(overlay)
-        body = QWidget(); body.setLayout(layout); self.setCentralWidget(body)
+        self.controls = PlaybackControls(self); self.controls.setObjectName('playbackControls'); self.controls.setLayout(bar)
+        # QVideoWidget的原生子窗口会盖住同层QWidget。用属于播放器的浮动工具窗
+        # 承载控制条，既保留原生GPU视频，也不挤占全屏画面。
+        body=QWidget(); layout=QVBoxLayout(body); layout.setContentsMargins(0,0,0,0); layout.addWidget(self.surface); self.setCentralWidget(body)
         self.hide_controls = QTimer(self); self.hide_controls.setSingleShot(True); self.hide_controls.setInterval(2500); self.hide_controls.timeout.connect(self.autohide)
-        for widget in [body, overlay, self.surface, self.controls, *self.controls.findChildren(QWidget)]:
-            widget.setMouseTracking(True); widget.installEventFilter(self)
-        self.setStyleSheet('QWidget { color:#f4f4f7; font-family:"Microsoft YaHei"; } QMainWindow {background:#0c0d10;} #playbackControls {background:rgba(24,26,32,230);border:1px solid #383b44;border-radius:16px;} QPushButton { background:transparent; border:0; border-radius:9px; padding:9px 12px; } QPushButton:hover {background:#3a3d48;} QSlider::groove:horizontal {height:4px;background:#454854;border-radius:2px;} QSlider::handle:horizontal {background:white;width:12px;margin:-4px 0;border-radius:6px;}')
+        for widget in [body, self.surface, self.controls, *self.controls.findChildren(QWidget)]:widget.setMouseTracking(True)
+        QApplication.instance().installEventFilter(self)
+        self.setStyleSheet('QWidget { color:#f4f4f7; font-family:"Microsoft YaHei"; } QMainWindow {background:#0c0d10;} QPushButton { background:transparent; border:0; border-radius:9px; padding:9px 12px; } QPushButton:hover {background:#3a3d48;} QSlider::groove:horizontal {height:4px;background:#454854;border-radius:2px;} QSlider::handle:horizontal {background:white;width:12px;margin:-4px 0;border-radius:6px;}')
+        self.controls.setStyleSheet(self.styleSheet()); self.setMinimumWidth(640)
         bridge.player.durationChanged.connect(lambda duration: self.seek.setMaximum(min(duration, 2147483647)))
         def position(value):
             if not self.seek.isSliderDown(): self.seek.setValue(value)
@@ -114,6 +132,7 @@ class PlayerWindow(QMainWindow):
         QShortcut(QKeySequence('F11'), body, activated=self.toggle_fullscreen)
         QShortcut(QKeySequence('Esc'), body, activated=lambda: self.set_fullscreen(False) if self.host_window().isFullScreen() else None)
         QShortcut(QKeySequence('Space'), body, activated=self.play.click)
+        QShortcut(QKeySequence('F9'),body,activated=controller.toggle_sidebar)
         self.retranslate()
 
     def retranslate(self):
@@ -127,24 +146,45 @@ class PlayerWindow(QMainWindow):
     def host_window(self): return self.controller.window if self.controller.docked else self
 
     def eventFilter(self, watched, event):
-        if event.type() in (QEvent.Type.MouseMove, QEvent.Type.MouseButtonPress): self.reveal_controls()
-        if event.type() == QEvent.Type.MouseButtonDblClick and watched not in [self.controls, *self.controls.findChildren(QWidget)]: self.toggle_fullscreen(); return True
+        kind=event.type()
+        if watched is self.controls and kind==QEvent.Type.Close:self.host_window().close(); return True
+        if watched in (self,self.surface,self.host_window()) and kind in (QEvent.Type.Move,QEvent.Type.Resize,QEvent.Type.Show,QEvent.Type.Hide,QEvent.Type.WindowStateChange):QTimer.singleShot(0,self.position_controls)
+        if kind in (QEvent.Type.MouseMove,QEvent.Type.MouseButtonPress,QEvent.Type.MouseButtonDblClick):
+            video=QRect(self.surface.mapToGlobal(QPoint(0,0)),self.surface.size())
+            if self.isVisible() and video.contains(QCursor.pos()):
+                self.reveal_controls()
+                if kind==QEvent.Type.MouseButtonDblClick and watched not in [self.controls,*self.controls.findChildren(QWidget)]:self.toggle_fullscreen(); return True
         return super().eventFilter(watched, event)
 
+    def showEvent(self,event):
+        self.closing=False; super().showEvent(event); QTimer.singleShot(0,self.reveal_controls)
+
+    def position_controls(self):
+        host=self.host_window()
+        if self.closing or not self.isVisible() or not host.isVisible() or host.isMinimized():self.controls.hide(); return
+        if self.controls.parentWidget() is not host:self.controls.setParent(host,Qt.WindowType.Tool|Qt.WindowType.FramelessWindowHint)
+        height=self.controls.sizeHint().height(); point=self.surface.mapToGlobal(QPoint(16,max(0,self.surface.height()-height-16)))
+        geometry=QRect(point.x(),point.y(),max(320,self.surface.width()-32),height)
+        if self.controls.geometry()!=geometry:self.controls.setGeometry(geometry)
+        if not self.controls_hidden:self.controls.show(); self.controls.raise_()
+
     def reveal_controls(self):
-        self.controls.show(); self.hide_controls.start()
+        if self.closing:return
+        self.controls_hidden=False; self.position_controls(); self.hide_controls.start()
 
     def autohide(self):
-        if self.host_window().isFullScreen() and self.bridge.player.isPlaying() and not self.controls.underMouse(): self.controls.hide()
+        if self.host_window().isFullScreen() and self.bridge.player.isPlaying() and not self.controls.underMouse():self.controls_hidden=True; self.controls.hide()
 
     def set_fullscreen(self, enabled):
         host = self.host_window()
         if enabled == host.isFullScreen(): return
         if enabled:
             self.before_fullscreen_collapsed = self.controller.collapsed
-            host.showFullScreen(); self.controller.collapse(True)
+            host.showFullScreen()
+            if not self.controller.hidden:self.controller.collapse(True)
         else:
-            host.showNormal(); self.controller.collapse(self.before_fullscreen_collapsed)
+            host.showNormal()
+            if not self.controller.hidden:self.controller.collapse(self.before_fullscreen_collapsed)
         self.retranslate()
         self.reveal_controls(); self.controller.follow(); self.controller.emit()
 
@@ -152,6 +192,7 @@ class PlayerWindow(QMainWindow):
         self.set_fullscreen(not self.host_window().isFullScreen())
 
     def closeEvent(self, event):
+        self.closing=True; self.controls.hide()
         self.bridge.stopCapture()
         if self.controller.target == int(self.winId()): self.controller.restore('player-closed')
         event.accept()
@@ -165,8 +206,10 @@ class Presentation(QObject):
         self.owner_window = None
         self.docked = False
         self.collapsed = False
+        self.hidden=False
         self.player = None
         self.saved_geometry = None
+        self.saved_minimum = window.minimumSize()
         self.saved_flags = window.windowFlags()
         self.saved_maximized = False
         self.timer = QTimer(self); self.timer.setInterval(200); self.timer.timeout.connect(self.follow)
@@ -174,7 +217,7 @@ class Presentation(QObject):
     def state(self, reason=None):
         rect = self.window.geometry()
         web = self.bridge.web_window
-        return {'attached': bool(self.target) or self.docked, 'docked': self.docked, 'collapsed': self.collapsed, 'fullscreen': self.window.isFullScreen(), 'visible': self.window.isVisible(), 'playerFullscreen': bool(self.player and self.player.host_window().isFullScreen()), 'webFullscreen': bool(web and web.isFullScreen()), 'playerVisible': bool(self.player and self.player.isVisible()), 'target': self.target, 'geometry': [rect.x(), rect.y(), rect.width(), rect.height()], 'reason': reason}
+        return {'attached': bool(self.target) or self.docked, 'docked': self.docked, 'collapsed': self.collapsed,'sidebarHidden':self.hidden, 'fullscreen': self.window.isFullScreen(), 'visible': self.window.isVisible(), 'playerFullscreen': bool(self.player and self.player.host_window().isFullScreen()), 'webFullscreen': bool(web and web.isFullScreen()), 'playerVisible': bool(self.player and self.player.isVisible()), 'target': self.target, 'geometry': [rect.x(), rect.y(), rect.width(), rect.height()], 'reason': reason}
 
     def emit(self, reason=None): QTimer.singleShot(0, lambda: self.bridge.notify('desktop:presentation', self.state(reason)))
 
@@ -190,6 +233,7 @@ class Presentation(QObject):
             raise ValueError('此系统可在独立播放器旁使用侧栏；外部课程窗口跟随尚未实现')
         if not self.target:
             self.saved_geometry = self.window.saveGeometry()
+            self.saved_minimum = self.window.minimumSize()
             self.saved_maximized = self.window.isMaximized()
             flags = Qt.WindowType.Tool | Qt.WindowType.FramelessWindowHint
             if not own_web: flags |= Qt.WindowType.WindowStaysOnTopHint
@@ -210,6 +254,9 @@ class Presentation(QObject):
         if self.target: self.restore()
         if self.player is None: self.player = PlayerWindow(self, self.bridge)
         if not self.docked:
+            self.saved_geometry = self.window.saveGeometry()
+            self.saved_minimum = self.window.minimumSize()
+            self.saved_maximized = self.window.isMaximized()
             self.browser = self.window.takeCentralWidget()
             self.workspace = QWidget(self.window)
             layout = QHBoxLayout(self.workspace); layout.setContentsMargins(0, 0, 0, 0); layout.setSpacing(0)
@@ -217,7 +264,9 @@ class Presentation(QObject):
             layout.addWidget(self.player, 1); layout.addWidget(self.browser)
             self.window.setCentralWidget(self.workspace)
             self.docked = True; self.collapsed = False
-        self.browser.setFixedWidth(48 if self.collapsed else 380)
+            area=self.window.screen().availableGeometry()
+            self.window.resize(min(max(1280,self.window.width()),area.width()),min(max(720,self.window.height()),area.height()))
+        self.hidden=False; self.browser.show(); self.browser.setFixedWidth(48 if self.collapsed else 380)
         self.player.show(); self.window.show(); self.window.raise_(); self.window.activateWindow(); self.emit()
         return self.state()
 
@@ -250,21 +299,48 @@ class Presentation(QObject):
         if self.window.isVisible() != visible: self.window.setVisible(visible)
 
     def collapse(self, collapsed):
+        self.hidden=False
+        if self.docked:self.browser.setVisible(not (collapsed and self.window.isFullScreen()))
         self.collapsed = collapsed
         if self.docked: self.browser.setFixedWidth(48 if collapsed else 380)
         self.follow(); self.emit(); return self.state()
+
+    def hide_sidebar(self):
+        self.hidden=True; self.collapsed=False
+        self.bridge.notify('desktop:sidebar-hidden',{})
+        if self.docked:self.browser.hide()
+        else:
+            self.timer.stop(); self.target=None; self.owner_window=None
+            self.window.setParent(None,self.saved_flags); self.window.setAttribute(Qt.WidgetAttribute.WA_ShowWithoutActivating,False)
+            if self.saved_geometry is not None:self.window.restoreGeometry(self.saved_geometry)
+            self.window.showMinimized()
+        self.emit('sidebar-hidden'); return self.state()
+
+    def show_sidebar(self):
+        self.hidden=False; self.collapsed=False
+        if self.docked:self.browser.show(); self.browser.setFixedWidth(380)
+        elif self.bridge.mode=='local':self.dock()
+        else:self.window.showNormal(); self.window.raise_(); self.window.activateWindow()
+        self.emit('sidebar-opened'); return self.state()
+
+    def toggle_sidebar(self):
+        return self.show_sidebar() if self.hidden or self.collapsed else self.hide_sidebar()
 
     def restore(self, reason=None):
         if self.docked:
             if self.window.isFullScreen(): self.player.set_fullscreen(False)
             workspace = self.window.takeCentralWidget()
             self.player.setParent(None, Qt.WindowType.Window); self.player.hide()
-            self.browser.setParent(self.window); self.browser.setMinimumWidth(0); self.browser.setMaximumWidth(16777215)
+            self.browser.setParent(self.window); self.browser.setMinimumWidth(0); self.browser.setMaximumWidth(16777215); self.browser.show()
             self.window.setCentralWidget(self.browser); workspace.deleteLater()
-            self.docked = False; self.collapsed = False
-            self.window.show(); self.window.activateWindow(); self.emit(reason); return self.state(reason)
+            self.docked = False; self.collapsed = False; self.hidden=False
+            self.window.setMinimumSize(self.saved_minimum)
+            if self.saved_geometry is not None:self.window.restoreGeometry(self.saved_geometry)
+            self.window.showMaximized() if self.saved_maximized else self.window.showNormal()
+            self.window.activateWindow(); self.emit(reason); return self.state(reason)
         self.timer.stop(); self.target = None; self.owner_window = None
         self.window.setParent(None, self.saved_flags)
+        self.window.setMinimumSize(self.saved_minimum)
         self.window.setAttribute(Qt.WidgetAttribute.WA_ShowWithoutActivating, False)
         if self.saved_geometry is not None: self.window.restoreGeometry(self.saved_geometry)
         self.window.showMaximized() if self.saved_maximized else self.window.showNormal()

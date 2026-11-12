@@ -36,10 +36,19 @@ with tempfile.TemporaryDirectory(prefix='vidence-native-check-') as temp:
     assert sidebar.video_id=='math' and sidebar.question.toPlainText()=='MATH DRAFT'
     sidebar.bridge_event('desktop:presentation',{'collapsed':True}); assert sidebar.body.isHidden() and not sidebar.rail.isHidden()
     sidebar.bridge_event('desktop:presentation',{'collapsed':False}); assert not sidebar.body.isHidden()
+    previous_size=window.size()
     bridge.mode='local'; bridge.presentation.dock(); app.processEvents(); bridge.presentation.collapse(True); app.processEvents()
     assert sidebar.width()==48 and sidebar.rail.width()==32 and sidebar.rail.geometry().right()<sidebar.width()
     bridge.presentation.collapse(False); app.processEvents(); assert sidebar.width()==380 and sidebar.body.isVisible()
+    sidebar.recorder.start('math'); sidebar.close_sidebar(); app.processEvents()
+    assert bridge.presentation.hidden and sidebar.isHidden() and bridge.presentation.player.isVisible() and not sidebar.recorder.timer.isActive()
+    bridge.presentation.player.set_fullscreen(True); app.processEvents(); assert sidebar.isHidden()
+    bridge.presentation.player.set_fullscreen(False); app.processEvents(); assert sidebar.isHidden()
+    bridge.presentation.toggle_sidebar(); app.processEvents(); assert not bridge.presentation.hidden and sidebar.isVisible()
     bridge.presentation.restore(); app.processEvents()
+    assert window.width()==previous_size.width() and window.height()<=previous_size.height(), '退出播放器恢复侧栏宽度，并适合当前屏幕'
+    bridge.mode='window'; sidebar.close_sidebar(); app.processEvents(); assert window.isMinimized()
+    bridge.presentation.show_sidebar(); app.processEvents(); assert not window.isMinimized()
     for locale in ('en','zh-TW','zh-CN'):
         sidebar.ui_language.setCurrentIndex(sidebar.ui_language.findData(locale)); sidebar.change_language(sidebar.ui_language.currentIndex()); app.processEvents()
         assert sidebar.tabs.tabText(0)=={'en':'Ask','zh-TW':'提問','zh-CN':'提问'}[locale]
@@ -51,5 +60,5 @@ with tempfile.TemporaryDirectory(prefix='vidence-native-check-') as temp:
     for index in range(sidebar.tabs.count()):sidebar.tabs.setCurrentIndex(index); app.processEvents(); assert sidebar.tabs.currentWidget().isVisible()
     assert not any('QtWebEngine' in name for name in sys.modules)
     sidebar.shutdown(); window.hide(); bridge.player.stop(); bridge.capture.stop(); bridge.presentation.timer.stop()
-    report={'passed':True,'nativeWidgets':True,'webEngineImported':False,'videoChatIsolation':True,'draftIsolation':True,'canceledSourcePreserved':True,'collapseExpand':True,'localeAndChannelOrder':True,'modelIdPreserved':True,'tabs':sidebar.tabs.count(),'scope':'isolated-offscreen-ui-not-real-media-or-model'}
+    report={'passed':True,'nativeWidgets':True,'webEngineImported':False,'videoChatIsolation':True,'draftIsolation':True,'canceledSourcePreserved':True,'collapseExpand':True,'trueSidebarCloseAndReopen':True,'closedSidebarStaysClosedInFullscreen':True,'externalSidebarMinimizesToTaskbar':True,'localeAndChannelOrder':True,'modelIdPreserved':True,'tabs':sidebar.tabs.count(),'scope':'isolated-offscreen-ui-not-real-media-or-model'}
     (artifacts/'native-ui-check.json').write_text(json.dumps(report,indent=2),encoding='utf8'); print(json.dumps(report))

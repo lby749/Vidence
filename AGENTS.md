@@ -39,7 +39,7 @@ node scripts/update-ui-check.mjs
 - 图片来自 assets/brand/logo-source.png；用 `python scripts/prepare-brand.py` 生成 PNG/ICO。应用、启动器、扩展和品牌标识统一，操作按钮保留语义。
 - 发布前核对源码、构建文件和随包脚本一致，并验证没有系统 Python/Node 的启动路径。不得把缺少 WebView2 的模拟分支称为新装 Windows 实测。
 - 浏览器插件与原生桌面分别构建、测试和发包。桌面界面/学习侧栏使用 Qt Widgets，不得重新引入 HTML 界面壳或 QtWebEngine；发行包必须检查没有浏览器内核、扩展构建和模型权重。应用内课程网页仅使用系统已有 WebView2；无此组件时仍可播放本地视频、挂靠外部课程窗口。
-- 主分支云端源码、成品运行检查通过后才创建 Release；已有发布不覆盖。发布下一版应提升 package.json 版本及 wxt.config.ts 的显示版本，自动提醒只读取公开版本元数据，不发送学习数据或凭据。
+- 主分支云端源码、成品运行检查通过后才创建 Release；已有发布不覆盖。插件版本修改 package.json 和 wxt.config.ts；原生桌面版本修改 desktop/app_version.py，发行标签使用 desktop-v 前缀，双方更新通道分别过滤。自动提醒只读取公开版本元数据，不发送学习数据或凭据。
 
 ## 尚未完成
 

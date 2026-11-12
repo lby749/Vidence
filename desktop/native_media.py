@@ -392,6 +392,12 @@ class NativeBridge(QObject):
     def collapseSidebar(self, collapsed): return result(**self.presentation.collapse(collapsed))
 
     @Slot(result=str)
+    def hideSidebar(self):return result(**self.presentation.hide_sidebar())
+
+    @Slot(result=str)
+    def showSidebar(self):return result(**self.presentation.show_sidebar())
+
+    @Slot(result=str)
     def restoreWindow(self): return result(**self.presentation.restore())
 
     @Slot(bool, result=str)

@@ -10,6 +10,7 @@ import sys
 from PySide6.QtCore import QProcess, QTimer, QUrl, Qt
 from PySide6.QtGui import QDesktopServices, QIcon, QPixmap
 from PySide6.QtWidgets import QApplication, QHBoxLayout, QLabel, QPushButton, QVBoxLayout, QWidget
+from app_version import VERSION
 
 FROZEN=getattr(sys,'frozen',False)
 ROOT=Path(sys._MEIPASS) if FROZEN else Path(__file__).resolve().parents[1]
@@ -67,7 +68,7 @@ class Launcher(QWidget):
         self.setStyleSheet('QWidget{background:#f8f9fc;color:#242833;font-family:"Segoe UI","Microsoft YaHei UI";font-size:14px;} QPushButton{background:white;border:1px solid #e1e5ed;border-radius:10px;padding:12px;} QPushButton#primary{background:#087bff;color:white;border:0;}')
         layout=QVBoxLayout(self); layout.setContentsMargins(32,30,32,30); layout.setSpacing(20)
         header=QHBoxLayout(); logo=QLabel(); logo.setPixmap(QPixmap(str(ROOT/'public/brand/icon-128.png')).scaled(36,36,Qt.AspectRatioMode.KeepAspectRatio,Qt.TransformationMode.SmoothTransformation)); header.addWidget(logo)
-        title=QLabel('Vidence · BETA'); title.setStyleSheet('font-size:23px;font-weight:600;'); header.addWidget(title); header.addStretch(); layout.addLayout(header)
+        title=QLabel('Vidence '+VERSION); title.setStyleSheet('font-size:23px;font-weight:600;'); header.addWidget(title); header.addStretch(); layout.addLayout(header)
         intro=QLabel('边看视频边提问，把学过的内容留下来。\n原生播放器与学习侧栏，无需安装开发工具。'); intro.setWordWrap(True); layout.addWidget(intro)
         self.open_button=QPushButton('打开 Vidence'); self.open_button.setObjectName('primary'); self.open_button.clicked.connect(self.open_app); layout.addWidget(self.open_button)
         extension=QPushButton('下载独立的浏览器插件'); extension.clicked.connect(lambda:QDesktopServices.openUrl(QUrl(RELEASES))); layout.addWidget(extension)
@@ -141,7 +142,7 @@ def main():
     window=Launcher()
     if '--self-check' in sys.argv:self_check(app,window,Path(sys.argv[sys.argv.index('--self-check')+1])); return 0
     window.show()
-    if '--open' in sys.argv:QTimer.singleShot(0,window.open_app)
+    if '--menu' not in sys.argv:QTimer.singleShot(0,window.open_app)
     return app.exec()
 
 

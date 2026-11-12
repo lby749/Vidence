@@ -1,0 +1,125 @@
+name: Native desktop - clean validation and release
+on:
+  push:
+    branches: [main]
+    paths:
+      - 'desktop/**'
+      - 'scripts/*native*.py'
+      - 'scripts/*desktop*.py'
+      - 'scripts/build-launcher.py'
+      - 'scripts/package-portable.py'
+      - 'scripts/windows-runtime-check.ps1'
+      - 'scripts/player-controls-check.py'
+      - 'scripts/prepare-notices.py'
+      - 'scripts/local-agent-bridge.mjs'
+      - 'scripts/memory-*.mjs'
+      - 'scripts/playback-*.py'
+      - 'scripts/frame-detail-check.py'
+      - 'src/models/desktop-embedding.json'
+      - 'src/models/native-runtime.json'
+      - 'src/ui/locales/**'
+      - 'public/brand/**'
+      - 'package*.json'
+      - 'requirements-dev.txt'
+      - '.github/workflows/desktop-release.yml'
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  build:
+    runs-on: windows-latest
+    env:
+      PYTHONUTF8: '1'
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          persist-credentials: false
+      - uses: actions/setup-node@v7
+        with:
+          node-version: '24'
+          package-manager-cache: false
+      - uses: actions/setup-python@v7
+        with:
+          python-version: '3.12'
+      - run: npm ci
+      - run: npm run compile
+      - run: npm test
+      - run: python -m pip install -r requirements-dev.txt
+      - run: python -m unittest discover -s desktop -p "test_*.py"
+      - run: python scripts/native-ui-check.py
+      - run: python scripts/native-api-setup-check.py
+      - run: choco install ffmpeg --yes --no-progress
+      - run: python scripts/frame-detail-check.py
+      - run: python scripts/playback-matrix.py
+      - run: ffmpeg -hide_banner -loglevel error -f lavfi -i testsrc2=s=1280x720:r=60000/1001 -t 20 -c:v libx264 -preset ultrafast -pix_fmt yuv420p artifacts/sidebar-test.mp4
+      - run: python scripts/player-controls-check.py --offscreen
+      - run: python scripts/build-desktop.py dist/native-release
+      - run: python scripts/package-portable.py dist/native-release/Vidence dist/Vidence-Desktop-Windows-x64.zip
+      - uses: actions/upload-artifact@v7
+        with:
+          name: native-desktop-frozen
+          path: dist/native-release/
+          include-hidden-files: true
+          retention-days: 14
+      - uses: actions/upload-artifact@v7
+        with:
+          name: native-desktop-download
+          path: |
+            dist/Vidence-Desktop-Windows-x64.zip
+            dist/Vidence-Desktop-Windows-x64.zip.sha256
+      - uses: actions/upload-artifact@v7
+        with:
+          name: native-desktop-media
+          path: artifacts/playback-matrix/720p-60.mp4
+      - uses: actions/upload-artifact@v7
+        if: always()
+        with:
+          name: native-desktop-build-evidence
+          path: |
+            artifacts/*.json
+            artifacts/*.png
+  runtime:
+    needs: build
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          persist-credentials: false
+      - uses: actions/download-artifact@v7
+        with:
+          name: native-desktop-frozen
+          path: portable
+      - uses: actions/download-artifact@v7
+        with:
+          name: native-desktop-media
+          path: smoke-media
+      - run: ./scripts/windows-runtime-check.ps1 -Package "portable/Vidence" -Media "smoke-media/720p-60.mp4"
+      - uses: actions/upload-artifact@v7
+        if: always()
+        with:
+          name: native-desktop-runtime-evidence
+          path: artifacts/cloud-runtime.json
+  release:
+    if: github.ref == 'refs/heads/main'
+    needs: [build, runtime]
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          persist-credentials: false
+      - uses: actions/download-artifact@v7
+        with:
+          name: native-desktop-download
+          path: release
+      - name: Publish the separate native desktop download
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          tag=$(python -c "import runpy;v=runpy.run_path('desktop/app_version.py');print(v['TAG_PREFIX']+v['VERSION'])")
+          if gh release view "$tag" >/dev/null 2>&1; then
+            echo 'This desktop version already exists; published files stay unchanged.'
+            exit 0
+          fi
+          gh release create "$tag" release/Vidence-Desktop-Windows-x64.zip release/Vidence-Desktop-Windows-x64.zip.sha256 --target "$GITHUB_SHA" --latest=false --title "Vidence Desktop 0.4.2 · 原生桌面版" --notes-file docs/desktop-release-notes.md

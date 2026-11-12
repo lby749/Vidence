@@ -5,6 +5,7 @@ import time
 import urllib.request
 from urllib.parse import urlsplit
 from provider_proxy import NoRedirect
+from app_version import TAG_PREFIX
 
 REPOSITORY='lby749/Vidence'
 RELEASES='https://github.com/'+REPOSITORY+'/releases'
@@ -25,15 +26,22 @@ def newest_release(rows,current):
     selected=None; highest=current_key
     for row in rows:
         if not isinstance(row,dict) or row.get('draft') or not row.get('published_at'):continue
-        key=version_key(row.get('tag_name')); url=urlsplit(row.get('html_url',''))
+        tag=row.get('tag_name','')
+        if not isinstance(tag,str) or not tag.startswith(TAG_PREFIX):continue
+        assets=row.get('assets')
+        if not isinstance(assets,list) or not any(isinstance(asset,dict) and asset.get('name')=='Vidence-Desktop-Windows-x64.zip' for asset in assets):continue
+        key=version_key(tag.removeprefix(TAG_PREFIX)); url=urlsplit(row.get('html_url',''))
         if key is None or key<=highest or (current_key[3] and (row.get('prerelease') or not key[3])):continue
         if url.scheme!='https' or url.netloc!='github.com' or not url.path.startswith('/'+REPOSITORY+'/releases/tag/') or url.query or url.fragment:continue
-        selected={'version':row['tag_name'].removeprefix('v'),'url':url.geturl(),'notes':str(row.get('body',''))[:1600]}; highest=key
+        selected={'version':tag.removeprefix(TAG_PREFIX),'url':url.geturl(),'notes':str(row.get('body',''))[:1600]}; highest=key
     return selected
 
 
 def check_updates(store,current,force=False):
     saved=store.setting('appUpdates',{'auto':True,'checkedAt':0}); now=int(time.time())
+    if saved.get('channel')!='desktop':
+        saved={'auto':saved.get('auto',True),'checkedAt':0,'channel':'desktop'}
+        store.set_setting('appUpdates',saved)
     if not force and (not saved.get('auto',True) or 0<=now-saved.get('checkedAt',0)<86400):return saved
     try:
         request=urllib.request.Request('https://api.github.com/repos/'+REPOSITORY+'/releases?per_page=20',headers={'Accept':'application/vnd.github+json','User-Agent':'Vidence-version-check'})

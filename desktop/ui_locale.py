@@ -12,6 +12,8 @@ NATIVE_EN.update({'开始记录':'Record','停止记录':'Stop','靠在视频旁
 NATIVE_TW.update({'允许 AI 读取画面':'允許 AI 讀取畫面','识别视频里的文字':'辨識影片裡的文字','下载离线检索资源':'下載離線檢索資源','切换视频或课程  ▾':'切換影片或課程  ▾'})
 NATIVE_EN.update({'连接已有服务':'Connect to an existing service','选择配对文件':'Choose pairing file','连接':'Connect','已有服务的连接令牌':'Existing service pairing token','已经启动过本机智能体？可使用它生成的连接令牌。这里不填写 API Key。':'Already running a local agent? Use its pairing token here, not an API Key.'})
 NATIVE_TW.update({'连接已有服务':'連線至既有服務','选择配对文件':'選擇配對檔案','连接':'連線','已有服务的连接令牌':'既有服務的連線權杖'})
+NATIVE_EN.update({'关闭学习栏':'Close learning sidebar','关闭学习栏并停止记录，视频继续播放':'Close sidebar and stop recording; keep the video playing'})
+NATIVE_TW.update({'关闭学习栏':'關閉學習欄','关闭学习栏并停止记录，视频继续播放':'關閉學習欄並停止記錄，影片繼續播放'})
 _root=Path(sys._MEIPASS) if getattr(sys,'frozen',False) else Path(__file__).resolve().parents[1]
 for locale,target,native in [('en',EN,NATIVE_EN),('zh-TW',TW,NATIVE_TW)]:
     file=_root/'src/ui/locales'/f'{locale}.json'

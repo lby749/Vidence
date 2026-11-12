@@ -40,6 +40,10 @@ try:
     pixel = image.pixelColor(10, 10)
     assert pixel.blue() > 30
     report['decodedPixels'] = [pixel.red(), pixel.green(), pixel.blue()]
+    control_image=player.controls.grab().toImage(); control_image.save(str(root/'artifacts/native-control-backplate.png'))
+    background = control_image.pixelColor(6, control_image.height() // 2)
+    assert background.alpha() > 180 and max(background.red(), background.green(), background.blue()) < 80, f'控制条必须有可读的深色背景：{background.getRgb()}'
+    report['readableControlBackplate'] = True
     QTest.mouseClick(player.play, Qt.MouseButton.LeftButton)
     wait_for(lambda: not bridge.player.isPlaying()); report['pauseClick'] = True
     player.seek.setFocus(); QTest.keyClick(player.seek, Qt.Key.Key_End); QTest.keyClick(player.seek, Qt.Key.Key_Left)
@@ -54,6 +58,7 @@ try:
     wait_for(main.isFullScreen); assert bridge.presentation.collapsed
     screen = main.screen().geometry(); assert main.geometry().size() == screen.size()
     assert player.surface.height() == player.centralWidget().height(), '全屏控件不能挤占视频画面'
+    assert player.surface.width() == main.centralWidget().width(), '全屏默认不保留白色侧栏条'
     main.grab().save(str(root / ('artifacts/player-fullscreen-offscreen.png' if offscreen else 'artifacts/player-fullscreen.png')))
     report['bottomFullscreenClick'] = True
     QTest.keyClick(main, Qt.Key.Key_Escape); wait_for(lambda: not main.isFullScreen())
