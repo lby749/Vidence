@@ -94,8 +94,16 @@ class Journey:
         assert all(row['review']['kind']=='knowledge' for row in self.store.rows('keyframes',identifier))
         self.click('生成记忆',2);self.wait(lambda:sidebar.ai_job is None and self.store.memory(identifier) is not None)
         memory=self.store.memory(identifier);assert number in memory['body'],memory['body']
-        answer=self.ask('According to this video\'s saved long-term memory, what sample measurement or population was recorded? Include its number. Do not infer other lessons.')
+        # This new user note exists only in memory, not in OCR/notes/chat. Asking
+        # for it proves memory was used rather than merely listed as context.
+        code=('OCEAN-619','FOREST-847')[index]
+        assert code not in text and all(code not in row.get('summary','') for row in self.store.rows('nodes',identifier))
+        sidebar.memory_text.setPlainText(memory['body']+'\nUser review code: '+code)
+        sidebar.memory_lock.setChecked(True);self.click('保存修改',2)
+        memory=self.store.memory(identifier);assert memory['locked'] and memory['versions']
+        answer=self.ask('According to this video\'s saved long-term memory, what sample measurement or population and user review code are recorded? Include both. Do not infer other lessons.')
         assert number in answer['answer'],answer['answer']
+        assert code in answer['answer'] and ('FOREST-847' if index==0 else 'OCEAN-619') not in answer['answer'],answer['answer']
         assert answer['memoryContext']['videoId']==identifier and answer['memoryContext']['revision']==memory['revision']
         assert ('82' if index==0 else '37') not in answer['answer'],answer['answer']
         assert all(row['videoId']==identifier for row in memory['sources'])
@@ -149,8 +157,10 @@ class Journey:
             self.sidebar.select_source(self.store.video(identifier))
             assert self.sidebar.question.toPlainText()=='DRAFT_'+str(index)
             assert self.store.memory(identifier) and self.store.rows('chats',identifier)
-            answer=self.ask('From the saved memory of this video only, repeat the recorded sample number.')
+            assert self.store.memory(identifier)['locked']
+            answer=self.ask('From the saved memory of this video only, repeat its sample number and user review code.')
             assert ('37','82')[index] in answer['answer'] and ('82','37')[index] not in answer['answer']
+            assert ('OCEAN-619','FOREST-847')[index] in answer['answer'] and ('FOREST-847','OCEAN-619')[index] not in answer['answer']
             assert answer['memoryContext']['videoId']==identifier
         return {'freshProcess':True,'savedMemoryUsedForNewAnswer':True,'chatAndDraftsRestored':True,'videoIsolationPreserved':True}
 
