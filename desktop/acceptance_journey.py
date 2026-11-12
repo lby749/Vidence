@@ -20,6 +20,11 @@ from native_agent import NativeAgent
 from ui_locale import ui_text
 
 
+def contains_number(text,number):
+    # Record UUIDs can contain "37"/"82"; those are not measurements.
+    return bool(re.search(r'(?<![A-Za-z0-9])'+re.escape(number)+r'(?![0-9A-Fa-f])',text))
+
+
 class Journey:
     def __init__(self,state,plan_file):
         self.state=state.resolve(); self.plan=json.loads(Path(plan_file).read_text(encoding='utf8'))
@@ -102,10 +107,10 @@ class Journey:
         sidebar.memory_lock.setChecked(True);self.click('保存修改',2)
         memory=self.store.memory(identifier);assert memory['locked'] and memory['versions']
         answer=self.ask('According to this video\'s saved long-term memory, what sample measurement or population and user review code are recorded? Include both. Do not infer other lessons.')
-        assert number in answer['answer'],answer['answer']
+        assert contains_number(answer['answer'],number),answer['answer']
         assert code in answer['answer'] and ('FOREST-847' if index==0 else 'OCEAN-619') not in answer['answer'],answer['answer']
         assert answer['memoryContext']['videoId']==identifier and answer['memoryContext']['revision']==memory['revision']
-        assert ('82' if index==0 else '37') not in answer['answer'],answer['answer']
+        assert not contains_number(answer['answer'],'82' if index==0 else '37'),answer['answer']
         assert all(row['videoId']==identifier for row in memory['sources'])
         if index==0:
             visual=self.ask('Read the original frame with get_timeline and get_frame. What is the large geometric shape and its color?',True)
@@ -159,7 +164,7 @@ class Journey:
             assert self.store.memory(identifier) and self.store.rows('chats',identifier)
             assert self.store.memory(identifier)['locked']
             answer=self.ask('From the saved memory of this video only, repeat its sample number and user review code.')
-            assert ('37','82')[index] in answer['answer'] and ('82','37')[index] not in answer['answer']
+            assert contains_number(answer['answer'],('37','82')[index]) and not contains_number(answer['answer'],('82','37')[index])
             assert ('OCEAN-619','FOREST-847')[index] in answer['answer'] and ('FOREST-847','OCEAN-619')[index] not in answer['answer']
             assert answer['memoryContext']['videoId']==identifier
         return {'freshProcess':True,'savedMemoryUsedForNewAnswer':True,'chatAndDraftsRestored':True,'videoIsolationPreserved':True}
