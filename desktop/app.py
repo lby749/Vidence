@@ -38,9 +38,10 @@ def main():
     app.setWindowIcon(QIcon(str(ROOT/'public/brand/app.ico'))); app.setStyleSheet(STYLE)
     STATE.mkdir(parents=True,exist_ok=True)
     journey=None
-    if '--journey' in sys.argv:
+    journey_plan=sys.argv[sys.argv.index('--journey')+1] if '--journey' in sys.argv else os.environ.get('VMA_JOURNEY_PLAN')
+    if journey_plan:
         from acceptance_journey import Journey
-        journey=Journey(STATE,sys.argv[sys.argv.index('--journey')+1])
+        journey=Journey(STATE,journey_plan)
         app.setAttribute(Qt.ApplicationAttribute.AA_DontUseNativeDialogs,True)
     lock=QLockFile(str(STATE/'native-desktop.lock'))
     if not lock.tryLock(100):

@@ -25,7 +25,7 @@ class Journey:
         self.state=state.resolve(); self.plan=json.loads(Path(plan_file).read_text(encoding='utf8'))
         assert os.environ.get('VMA_STATE_DIR') and self.state.is_relative_to(Path(tempfile.gettempdir()).resolve()),'Acceptance data must be in an explicit temporary directory'
         self.report=Path(self.plan['report']); self.report.parent.mkdir(parents=True,exist_ok=True)
-        self.result={'version':VERSION,'scope':'frozen-native-user-journey-generated-teaching-media','phase':self.plan['phase'],'realModel':True,'model':self.plan['model'],'steps':[],'passed':False}
+        self.result={'version':VERSION,'scope':'frozen-native-user-journey-generated-teaching-media','phase':self.plan['phase'],'entryPoint':'one-click-launcher','processId':os.getpid(),'terminal':False,'realModel':True,'model':self.plan['model'],'steps':[],'passed':False}
         self.config={'route':'api','protocol':'openai','baseUrl':self.plan['baseUrl'],'model':self.plan['model'],'apiKey':'journey-loopback-only'}
         assert self.config['baseUrl'].startswith('http://127.0.0.1:')
         if os.name=='nt':
@@ -167,7 +167,7 @@ class Journey:
             else:self.step('restarted application reads and uses persisted learning data',self.restart)
             self.result['passed']=True
         except Exception as error:self.result['error']=str(error)[:2000];self.result['traceback']=traceback.format_exc()[-5000:]
-        finally:self.save();window.close();QApplication.exit(0 if self.result['passed'] else 1)
+        finally:self.result['terminal']=True;self.save();window.close();QApplication.exit(0 if self.result['passed'] else 1)
 
     def discover(self):
         self.sidebar.discover();self.wait(lambda:self.sidebar.ai_job is None and self.sidebar.model.count()>0)

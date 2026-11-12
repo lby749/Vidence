@@ -38,10 +38,23 @@ try {
         $report=Join-Path $evidence ($phase+'.json')
         $plan=Join-Path $state 'journey-plan.json'
         @{ phase=$phase;report=$report;baseUrl="http://127.0.0.1:$port/v1";model='vidence-cloud-vision';media=@((Join-Path $mediaPath 'ocean.mp4'),(Join-Path $mediaPath 'forest.mp4')) } | ConvertTo-Json -Depth 5 | Set-Content -LiteralPath $plan -Encoding utf8NoBOM
-        $application=Start-Process -FilePath (Join-Path $packagePath 'Vidence.exe') -ArgumentList @('--journey',('"'+$plan+'"')) -WindowStyle Hidden -PassThru
-        if (-not $application.WaitForExit(1500000)) { $application.Kill();throw 'Frozen full journey timed out' }
-        $result=Get-Content -LiteralPath $report -Raw | ConvertFrom-Json
-        if ($application.ExitCode -ne 0 -or -not $result.passed -or -not $result.realModel) { throw ('Frozen journey failed: '+$result.error) }
+        $env:VMA_JOURNEY_PLAN=$plan
+        $launcher=Start-Process -FilePath (Join-Path $packagePath '一键启动.exe') -WindowStyle Hidden -PassThru
+        if (-not $launcher.WaitForExit(30000) -or $launcher.ExitCode -ne 0) { throw 'One-click launcher did not finish normally' }
+        $result=$null;$deadline=[DateTime]::UtcNow.AddMinutes(25)
+        while ([DateTime]::UtcNow -lt $deadline) {
+            if (Test-Path -LiteralPath $report) {
+                try { $result=Get-Content -LiteralPath $report -Raw | ConvertFrom-Json; if ($result.terminal) {break} } catch {}
+            }
+            Start-Sleep -Milliseconds 500
+        }
+        if (-not $result.terminal) { throw 'Frozen full journey timed out' }
+        $application=Get-Process -Id $result.processId -ErrorAction SilentlyContinue
+        if ($application) {
+            if ($application.Path -ne (Join-Path $packagePath 'Vidence.exe')) { throw 'Unexpected acceptance process' }
+            if (-not $application.WaitForExit(30000)) { $application.Kill();throw 'Acceptance app did not close' }
+        }
+        if (-not $result.passed -or -not $result.realModel) { throw ('Frozen journey failed: '+$result.error) }
         Write-Output ("FROZEN_REAL_MODEL_JOURNEY_PASS "+$phase)
     }
 } finally {
