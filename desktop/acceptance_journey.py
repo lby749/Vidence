@@ -170,7 +170,7 @@ class Journey:
         finally:self.result['terminal']=True;self.save();window.close();QApplication.exit(0 if self.result['passed'] else 1)
 
     def discover(self):
-        self.sidebar.discover();self.wait(lambda:self.sidebar.ai_job is None and self.sidebar.model.count()>0)
+        self.sidebar.discover();self.wait(lambda:self.sidebar.quick_model.currentData()==self.plan['model'])
         assert self.sidebar.quick_model.currentData()==self.plan['model'];return {'modelId':self.sidebar.quick_model.currentData()}
 
     def controls(self):
