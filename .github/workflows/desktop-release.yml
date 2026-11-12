@@ -111,7 +111,7 @@ jobs:
       - uses: actions/cache@v5
         with:
           path: ${{ runner.temp }}/vidence-journey-ai
-          key: native-vision-qwen25vl3b-q4-5037fcf-llama-b11597
+          key: native-vision-qwen3vl4b-q4-1cd86af-llama-b11597
       - run: ./scripts/windows-journey-check.ps1 -Package "portable/Vidence" -Media "journey-media"
       - uses: actions/upload-artifact@v7
         if: always()

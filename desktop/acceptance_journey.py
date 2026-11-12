@@ -176,9 +176,13 @@ class Journey:
         # still come from the unchanged NativeAgent and real HTTP service.
         complete=NativeAgent.complete
         def traced_complete(agent,prompt,executor=None):
-            answer=complete(agent,prompt,executor)
-            self.result.setdefault('modelResponses',[]).append({'toolsEnabled':executor is not None,'toolCalls':executor.calls if executor else 0,'images':executor.images if executor else 0,'answer':answer[:5000]})
-            self.save();return answer
+            trace={'toolsEnabled':executor is not None}
+            try:
+                answer=complete(agent,prompt,executor);trace['answer']=answer[:5000];return answer
+            except Exception as error:trace['error']=str(error);raise
+            finally:
+                trace.update(toolCalls=executor.calls if executor else 0,images=executor.images if executor else 0)
+                self.result.setdefault('modelResponses',[]).append(trace);self.save()
         NativeAgent.complete=traced_complete
         try:
             if self.plan['phase']=='record':
