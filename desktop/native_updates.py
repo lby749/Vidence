@@ -39,8 +39,8 @@ def newest_release(rows,current):
 
 def check_updates(store,current,force=False):
     saved=store.setting('appUpdates',{'auto':True,'checkedAt':0}); now=int(time.time())
-    if saved.get('channel')!='desktop':
-        saved={'auto':saved.get('auto',True),'checkedAt':0,'channel':'desktop'}
+    if saved.get('channel')!='desktop' or saved.get('currentVersion')!=current:
+        saved={'auto':saved.get('auto',True),'checkedAt':0,'channel':'desktop','currentVersion':current}
         store.set_setting('appUpdates',saved)
     if not force and (not saved.get('auto',True) or 0<=now-saved.get('checkedAt',0)<86400):return saved
     try:

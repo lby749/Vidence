@@ -9,6 +9,7 @@ on:
       - 'scripts/build-launcher.py'
       - 'scripts/package-portable.py'
       - 'scripts/windows-runtime-check.ps1'
+      - 'scripts/*journey*'
       - 'scripts/player-controls-check.py'
       - 'scripts/prepare-notices.py'
       - 'scripts/local-agent-bridge.mjs'
@@ -51,16 +52,11 @@ jobs:
       - run: choco install ffmpeg --yes --no-progress
       - run: python scripts/frame-detail-check.py
       - run: python scripts/playback-matrix.py
+      - run: python scripts/prepare-journey-media.py
       - run: ffmpeg -hide_banner -loglevel error -f lavfi -i testsrc2=s=1280x720:r=60000/1001 -t 20 -c:v libx264 -preset ultrafast -pix_fmt yuv420p artifacts/sidebar-test.mp4
       - run: python scripts/player-controls-check.py --offscreen
       - run: python scripts/build-desktop.py dist/native-release
       - run: python scripts/package-portable.py dist/native-release/Vidence dist/Vidence-Desktop-Windows-x64.zip
-      - uses: actions/upload-artifact@v7
-        with:
-          name: native-desktop-frozen
-          path: dist/native-release/
-          include-hidden-files: true
-          retention-days: 14
       - uses: actions/upload-artifact@v7
         with:
           name: native-desktop-download
@@ -72,6 +68,10 @@ jobs:
           name: native-desktop-media
           path: artifacts/playback-matrix/720p-60.mp4
       - uses: actions/upload-artifact@v7
+        with:
+          name: native-journey-media
+          path: artifacts/cloud-journey/*.mp4
+      - uses: actions/upload-artifact@v7
         if: always()
         with:
           name: native-desktop-build-evidence
@@ -81,24 +81,42 @@ jobs:
   runtime:
     needs: build
     runs-on: windows-latest
+    timeout-minutes: 55
     steps:
       - uses: actions/checkout@v7
         with:
           persist-credentials: false
       - uses: actions/download-artifact@v7
         with:
-          name: native-desktop-frozen
-          path: portable
+          name: native-desktop-download
+          path: incoming
+      - name: Install the exact downloadable ZIP
+        shell: pwsh
+        run: |
+          $expected=(Get-Content incoming/Vidence-Desktop-Windows-x64.zip.sha256).Split(' ')[0]
+          if ((Get-FileHash incoming/Vidence-Desktop-Windows-x64.zip -Algorithm SHA256).Hash -ne $expected) { throw 'Downloadable ZIP checksum mismatch' }
+          Expand-Archive -LiteralPath incoming/Vidence-Desktop-Windows-x64.zip -DestinationPath portable
       - uses: actions/download-artifact@v7
         with:
           name: native-desktop-media
           path: smoke-media
       - run: ./scripts/windows-runtime-check.ps1 -Package "portable/Vidence" -Media "smoke-media/720p-60.mp4"
+      - uses: actions/download-artifact@v7
+        with:
+          name: native-journey-media
+          path: journey-media
+      - uses: actions/cache@v5
+        with:
+          path: ${{ runner.temp }}/vidence-journey-ai
+          key: native-vision-qwen25vl3b-q4-5037fcf-llama-b11597
+      - run: ./scripts/windows-journey-check.ps1 -Package "portable/Vidence" -Media "journey-media"
       - uses: actions/upload-artifact@v7
         if: always()
         with:
           name: native-desktop-runtime-evidence
-          path: artifacts/cloud-runtime.json
+          path: |
+            artifacts/cloud-runtime.json
+            artifacts/cloud-journey/
   release:
     if: github.ref == 'refs/heads/main'
     needs: [build, runtime]

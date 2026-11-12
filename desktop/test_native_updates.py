@@ -24,8 +24,13 @@ class NativeUpdateChecks(unittest.TestCase):
 
     def test_channel_migration_keeps_auto_off_and_discards_old_update(self):
         store=Mock(); store.setting.return_value={'auto':False,'checkedAt':99,'update':{'version':'9.0.0'}}
-        self.assertEqual(check_updates(store,'0.4.2'),{'auto':False,'checkedAt':0,'channel':'desktop'})
-        store.set_setting.assert_called_once_with('appUpdates',{'auto':False,'checkedAt':0,'channel':'desktop'})
+        self.assertEqual(check_updates(store,'0.4.2'),{'auto':False,'checkedAt':0,'channel':'desktop','currentVersion':'0.4.2'})
+        store.set_setting.assert_called_once_with('appUpdates',{'auto':False,'checkedAt':0,'channel':'desktop','currentVersion':'0.4.2'})
+
+    def test_upgraded_version_drops_same_day_recommendation(self):
+        store=Mock(); store.setting.return_value={'channel':'desktop','currentVersion':'0.4.2','auto':False,'checkedAt':999,'update':{'version':'0.4.3'}}
+        result=check_updates(store,'0.4.3')
+        self.assertNotIn('update',result); self.assertEqual(result['currentVersion'],'0.4.3'); self.assertFalse(result['auto'])
 
 
 if __name__=='__main__':unittest.main()

@@ -2,7 +2,7 @@
 import json
 import os
 import sys
-from PySide6.QtCore import QLockFile, QTimer
+from PySide6.QtCore import QLockFile, QTimer, Qt
 from PySide6.QtGui import QIcon
 from PySide6.QtWidgets import QApplication, QMainWindow, QMessageBox
 from native_media import ROOT, STATE, NativeBridge, normalize_web_url
@@ -37,6 +37,11 @@ def main():
     app = QApplication(sys.argv); app.setApplicationName('Vidence'); app.setQuitOnLastWindowClosed(False)
     app.setWindowIcon(QIcon(str(ROOT/'public/brand/app.ico'))); app.setStyleSheet(STYLE)
     STATE.mkdir(parents=True,exist_ok=True)
+    journey=None
+    if '--journey' in sys.argv:
+        from acceptance_journey import Journey
+        journey=Journey(STATE,sys.argv[sys.argv.index('--journey')+1])
+        app.setAttribute(Qt.ApplicationAttribute.AA_DontUseNativeDialogs,True)
     lock=QLockFile(str(STATE/'native-desktop.lock'))
     if not lock.tryLock(100):
         from launcher import focus_app
@@ -47,6 +52,7 @@ def main():
     window.native=NativeBridge(window)
     window.sidebar=NativeSidebar(window,window.native,NativeStore(STATE/'learning.sqlite'),window.models)
     window.setCentralWidget(window.sidebar); window.show()
+    if journey:QTimer.singleShot(0,lambda:journey.run(window))
     if '--video' in sys.argv:
         file=sys.argv[sys.argv.index('--video')+1]
         def open_video():
