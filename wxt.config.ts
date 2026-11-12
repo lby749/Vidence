@@ -19,8 +19,8 @@ export default defineConfig({
     short_name: 'Vidence',
     description:
       '边看视频边建立本地记忆库：记录字幕与关键画面，可检索、可选中节点向 AI 提问。',
-    version: '0.4.0',
-    version_name: '0.4.0',
+    version: '0.4.1',
+    version_name: '0.4.1',
     icons: { 16: 'brand/icon-16.png', 32: 'brand/icon-32.png', 48: 'brand/icon-48.png', 128: 'brand/icon-128.png' },
     minimum_chrome_version: '116',
     sandbox: { pages: ['sandbox.html'] },

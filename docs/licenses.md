@@ -61,3 +61,5 @@ Vidence 的项目源码以 MIT 发布。本页列出它使用的第三方程序�
 感谢您的支持，如果有帮助的话，请点一个 [STAR](https://github.com/lby749/Vidence)，谢谢！
 
 原生桌面通过 PyWinRT（winrt-*，MIT）调用系统已有 Windows OCR，不捆绑 OCR 模型或浏览器内核。PyWinRT 的原始许可证随运行包保留。离线 llama.cpp 运行时（MIT）按需下载，下载目录保留上游自带声明；它不再进入桌面发行包。
+
+- 浏览器插件Windows安装引导的C#源码以本项目MIT发布，仅使用系统.NET Framework/WinForms，未再分发.NET、Python、Node或浏览器运行时。内嵌ZIP保留扩展生产依赖原始声明。

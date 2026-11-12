@@ -6,6 +6,7 @@ on:
       - 'src/**'
       - 'public/**'
       - 'scripts/**'
+      - 'installer/**'
       - 'docs/**'
       - 'README.md'
       - 'AGENTS.md'
@@ -23,7 +24,7 @@ jobs:
         os: [ubuntu-latest, windows-latest]
     runs-on: ${{ matrix.os }}
     env:
-      E2E_BROWSER: chromium
+      E2E_BROWSER: ${{ matrix.os == 'windows-latest' && 'msedge' || 'chromium' }}
       E2E_HEADLESS: '1'
       PYTHONUTF8: '1'
     steps:
@@ -42,6 +43,7 @@ jobs:
       - run: npm test
       - run: npm run build
       - run: npx playwright install --with-deps chromium
+        if: runner.os == 'Linux'
       - run: python scripts/package-extension.py dist/Vidence-Browser-Extension.zip
       - run: python scripts/extension-package-check.py dist/Vidence-Browser-Extension.zip
       - run: node scripts/bridge-check.mjs
@@ -58,8 +60,37 @@ jobs:
           name: extension-evidence-${{ matrix.os }}
           path: artifacts/
           retention-days: 14
-  release:
+  windows-installer:
     needs: validate
+    runs-on: windows-latest
+    env:
+      PYTHONUTF8: '1'
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          persist-credentials: false
+      - uses: actions/setup-python@v7
+        with:
+          python-version: '3.12'
+      - uses: actions/download-artifact@v7
+        with:
+          name: standalone-browser-extension
+          path: dist
+      - run: python scripts/build-extension-installer.py dist/Vidence-Browser-Extension.zip dist/Vidence-Extension-Setup-Windows.exe
+      - run: python scripts/extension-exe-check.py dist/Vidence-Extension-Setup-Windows.exe
+      - uses: actions/upload-artifact@v7
+        with:
+          name: native-extension-installer
+          path: |
+            dist/Vidence-Extension-Setup-Windows.exe
+            dist/Vidence-Extension-Setup-Windows.exe.sha256
+      - uses: actions/upload-artifact@v7
+        if: always()
+        with:
+          name: native-installer-evidence
+          path: artifacts/
+  release:
+    needs: windows-installer
     if: github.ref == 'refs/heads/main'
     runs-on: ubuntu-latest
     permissions:
@@ -71,6 +102,10 @@ jobs:
       - uses: actions/download-artifact@v7
         with:
           name: standalone-browser-extension
+          path: dist
+      - uses: actions/download-artifact@v7
+        with:
+          name: native-extension-installer
           path: dist
       - name: Publish standalone extension
         shell: bash
@@ -88,6 +123,6 @@ jobs:
             echo "A draft already exists; inspect it before publishing."
             exit 1
           fi
-          (cd dist && sha256sum --check Vidence-Browser-Extension.zip.sha256)
-          gh release create "$tag" dist/Vidence-Browser-Extension.zip dist/Vidence-Browser-Extension.zip.sha256 --target "$GITHUB_SHA" --title "Vidence $version · 浏览器插件" --notes-file docs/extension-release-notes.md --draft
+          (cd dist && sha256sum --check Vidence-Browser-Extension.zip.sha256 && sha256sum --check Vidence-Extension-Setup-Windows.exe.sha256)
+          gh release create "$tag" dist/Vidence-Extension-Setup-Windows.exe dist/Vidence-Extension-Setup-Windows.exe.sha256 dist/Vidence-Browser-Extension.zip dist/Vidence-Browser-Extension.zip.sha256 --target "$GITHUB_SHA" --title "Vidence $version · 浏览器插件与安装引导" --notes-file docs/extension-release-notes.md --draft
           gh release edit "$tag" --draft=false --prerelease=false --latest

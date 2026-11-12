@@ -1,7 +1,7 @@
 {
   "name": "vidence",
   "private": true,
-  "version": "0.4.0",
+  "version": "0.4.1",
   "type": "module",
   "description": "Vidence：边看视频边建立可检索、可提问的学习记忆。",
   "license": "MIT",

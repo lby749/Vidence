@@ -52,3 +52,7 @@ Vidence 更名保留既有数据目录 VideoMemoryAssistant、数据库名及本
 原生学习栏的聊天、记忆、原图读取、检索均以 videoId 隔离；笔记范围还核对起止时间。系统OCR不含置信度保证，低分辨率、小字和公式可能误识，摘要须保留不确定性；重要画面用经授权的原图问答核对。窗口采集的时间标为“记录时间”，不能冒充课程播放器进度。
 
 应用内课程网页仅借用系统已有 WebView2；它不是桌面界面的渲染层。不随包分发 WebView2 内核或自动安装程序，缺少该系统组件时仍能使用本地视频与外部课程窗口。原生版暂未迁移 Notion 同步和 AI 网页渠道；浏览器插件保留对应原有功能。旧 IndexedDB 不删除，原生 SQLite 导入目前以旧版导出资料为入口，尚未完成所有旧聊天的自动迁移。
+
+## 独立插件安装分发
+
+0.4.1提供原生Windows安装引导EXE与纯插件ZIP。ZIP根目录即扩展manifest.json，只含扩展资源、说明及原始许可。EXE使用系统.NET Framework/WinForms，内嵌相同ZIP，校验SHA后暂存并替换%LOCALAPPDATA%/VideoMemoryAssistant/browser-extension代码目录；不读取浏览器资料或写入策略。浏览器首次确认仍由用户完成。构建scripts/build-extension-installer.py，成品搬移验收scripts/extension-exe-check.py；原生桌面播放器不包含在这个EXE中。

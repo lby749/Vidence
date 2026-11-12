@@ -53,4 +53,6 @@ Android、TTS、听视频 ASR 尚未实现；iPhone 暂缓。Apple/AMD 实机、
 
 ## 当前发布范围
 
-按用户最新要求，浏览器插件先独立发布为 0.4.0，移除 BETA 标识。原生桌面版继续单独开发与验收，不在插件发行包中。使用 `.github/workflows/extension-release.yml` 检查并发布插件；原生桌面流水线手动运行，不自动公开未完成的桌面成品。
+按用户最新要求，浏览器插件当前独立版本为 0.4.1，移除 BETA 标识。原生桌面版继续单独开发与验收，不在插件发行包中。使用 `.github/workflows/extension-release.yml` 检查并发布插件；原生桌面流水线手动运行，不自动公开未完成的桌面成品。
+
+- 独立插件ZIP根目录为manifest.json，不放EXE/CMD/PowerShell；Windows图形安装引导由installer/BrowserExtensionSetup.cs与系统.NET Framework构建，内嵌同一个已验收ZIP。使用build-extension-installer.py与extension-exe-check.py验证；不捆绑浏览器或Python/Node，不以企业策略或浏览器配置写入绕过首次确认。

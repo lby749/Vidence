@@ -69,3 +69,10 @@
 最终ZIP在新临时目录解压，并直接从那个目录加载到隔离浏览器，检查包完整性、禁止文件、原始许可、字幕记录与检索、关闭后不自弹的页面侧栏、API目录与用户选定模型的实际流式探测、栏内模型切换持久化、三语言更新/反馈与设置。API为自建受控服务，不是新增真实模型验收。Windows安装引导在系统PowerShell中以隔离LOCALAPPDATA和禁止实际打开浏览器的桩验证安装/重复更新，不触碰用户插件。
 
 云端使用无项目依赖缓存的Linux和Windows托管机器，从源码安装开发依赖，再检测成品。插件运行只需要已有的Chrome/Edge；云端开发测试需要Node/Python不能解释为用户运行也需要它们。macOS、所有真实网站账号与物理空白机器不在本轮实测范围。
+
+
+## 0.4.1 安装引导与纯插件包
+
+新增命令：`python scripts/build-extension-installer.py dist/Vidence-Browser-Extension.zip dist/Vidence-Extension-Setup-Windows.exe`、`python scripts/extension-exe-check.py dist/Vidence-Extension-Setup-Windows.exe`。纯ZIP根目录为manifest.json，拒绝EXE/CMD/PS1/BAT及模型文件。
+
+EXE在新Windows runner构建，输入是Linux已验收的同一个ZIP；搬到带空格的临时目录，将PATH设为System32后运行成品自检。自检使用临时AppData检查首次安装、重复安装、相邻学习数据标记保留、过期JS删除、路径穿越拒绝及内嵌SHA；不访问用户配置，也不打开浏览器。界面截图为离屏窗口渲染，不能当成真实账号安装或物理空白Windows验收。Windows系统自带.NET Framework仍是依赖，不随包分发。

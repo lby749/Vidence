@@ -10,13 +10,16 @@ Vidence 是一款 AI 视频学习助手。看网课、教程或知识视频时�
 
 **[打开下载与版本页面](https://github.com/lby749/Vidence/releases)**
 
-当前发布 **0.4.0 独立浏览器插件**，适用于桌面版 Chrome / Microsoft Edge。
+当前版本 **0.4.1**。桌面 Chrome / Microsoft Edge 插件提供两种下载，选一种即可：
 
-**[下载浏览器插件 ZIP](https://github.com/lby749/Vidence/releases/download/v0.4.0/Vidence-Browser-Extension.zip)** · [查看版本说明与下载文件](https://github.com/lby749/Vidence/releases/tag/v0.4.0)
+| 下载 | 怎么使用 |
+| --- | --- |
+| **[Windows 安装引导 EXE](https://github.com/lby749/Vidence/releases/download/v0.4.1/Vidence-Extension-Setup-Windows.exe)**（推荐 Windows 10 / 11） | 直接双击，选择浏览器，点击安装并打开浏览器；无需解压、CMD 或开发工具 |
+| **[纯插件 ZIP](https://github.com/lby749/Vidence/releases/download/v0.4.1/Vidence-Browser-Extension.zip)** | 完整解压，在扩展管理页加载包含 `manifest.json` 的文件夹；适合手动安装和 macOS / Linux |
 
-完整解压，Windows 双击“安装到浏览器.cmd”，按提示开启开发者模式并加载插件。macOS / Linux 用户在扩展管理页选择“加载已解压的扩展”，加载包内的 `extension` 文件夹。详细步骤见[插件安装说明](docs/browser-extension.md)。
+首次使用仍需在浏览器开启开发者模式，确认“加载已解压的扩展”。EXE 会提供文件夹路径并打开安装页，不能代替浏览器内的确认。详见[插件安装说明](docs/browser-extension.md)。
 
-插件直接使用你已安装的浏览器，**不附带浏览器内核、桌面程序或模型权重**，不要求安装 Python / Node.js。包内包含可选离线功能需要的推理代码；模型由用户选择档位后再下载。独立原生桌面版正在完善，不包含在本次发布中。BETA.3 为旧合并包，不推荐新用户下载。
+两种下载包含同一套插件，**不附带浏览器内核、桌面应用或模型权重**，不需要安装 Python / Node.js。纯插件 ZIP 不含 EXE、CMD 或 PowerShell。可选离线功能的模型由用户选择档位后下载。独立原生桌面版正在完善，不在本次发布中。
 
 <p align="center"><img src="assets/brand/project-cover.png" width="360" alt="项目配图：连接知识的星空"/></p>
 
@@ -32,7 +35,7 @@ Vidence 是一款 AI 视频学习助手。看网课、教程或知识视频时�
 
 ## 开始使用
 
-1. 安装插件，打开想学习的视频网页。点击视频旁的 Vidence 按钮，再打开右侧学习栏。
+1. 选择 EXE 引导或纯插件 ZIP 安装，打开想学习的视频网页。点击视频旁的 Vidence 按钮，再打开右侧学习栏。
 2. 在“配置 API”粘贴自己的 API Key，获取可用模型并测试连接；也可以自行选择模型。
 3. 开始记录、提问，结束后到视频库整理笔记和长期记忆。不同视频分别保存。
 4. 学习栏可通过右上角 × 关闭；再次点击页面上的 Vidence 按钮即可打开。
@@ -43,7 +46,7 @@ API 问答不依赖桌面程序。本机 OpenCode Go / DSH 等智能体属于可
 
 ## 反馈与建议
 
-当前版本为 **0.4.0**，仍在持续完善。如果遇到问题，或有什么改进建议，欢迎通过[问题反馈与建议](https://github.com/lby749/Vidence/issues/new/choose)提出，非常感谢！
+当前版本为 **0.4.1**，仍在持续完善。如果遇到问题，或有什么改进建议，欢迎通过[问题反馈与建议](https://github.com/lby749/Vidence/issues/new/choose)提出，非常感谢！
 
 应用内也可以在“设置 → 应用更新”点击“反馈问题或建议”。
 
