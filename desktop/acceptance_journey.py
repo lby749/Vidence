@@ -5,6 +5,7 @@ Generated teaching videos are fixtures, never described as actual platform cours
 """
 import json
 import os
+import re
 from pathlib import Path
 import tempfile
 import time
@@ -135,9 +136,9 @@ class Journey:
             frame=dict(self.store.rows('keyframes',source)[0],id='original',videoId='pixels');frame.pop('review',None);store.put('keyframes','pixels',frame)
             answer=NativeAgent(store,'').ask('pixels','Use get_timeline and get_frame to inspect the original pixels. Name the large colored geometric shape. If you cannot read the original image, say UNAVAILABLE. Never infer it from text or filenames.',allowed)
             text=answer['answer'].lower()
-            if index==0:assert 'red' in text and ('rectang' in text or 'square' in text) and answer['images']==1,answer
-            elif index==1:assert answer['images']==0 and 'unavailable' in text and 'red' not in text and 'blue' not in text,answer
-            else:assert 'blue' in text and ('circl' in text or 'round' in text) and answer['images']==1,answer
+            if index==0:assert re.search(r'\bred\b',text) and ('rectang' in text or 'square' in text) and answer['images']==1,answer
+            elif index==1:assert answer['images']==0 and 'unavailable' in text and not re.search(r'\b(red|blue)\b',text),answer
+            else:assert re.search(r'\bblue\b',text) and ('circl' in text or 'round' in text) and answer['images']==1,answer
             results.append({'allowed':allowed,'images':answer['images'],'answer':answer['answer'],'references':answer['frames']})
         return results
 
